@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:pdf_trial"
         mc:Ignorable="d"
-        Title="diff PDF document trial" Height="450" Width="800" Closing="Window_Closing" Background="LightGray" >
+        Title="close_compare_PDF_as_image alpha" Height="450" Width="800" Closing="Window_Closing" Background="LightGray" >
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />

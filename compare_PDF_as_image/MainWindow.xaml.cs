@@ -191,7 +191,7 @@ namespace compare_PDF_as_image
             e.Cancel = true;
             Process currentProcess = Process.GetCurrentProcess();
             Process pc = new Process();
-            pc.StartInfo.FileName = "close_pdf_trial.bat";
+            pc.StartInfo.FileName = "close_compare_PDF_as_image.bat";
             pc.StartInfo.Arguments = currentProcess.Id.ToString();
             pc.StartInfo.CreateNoWindow = true;
             pc.StartInfo.UseShellExecute = false;
