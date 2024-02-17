@@ -60,7 +60,15 @@ namespace compare_PDF_as_image
                         using (var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream())
                         {
                             PdfPageRenderOptions renderOptions = new PdfPageRenderOptions();
-                            renderOptions.DestinationWidth = (uint)Math.Round(page.Dimensions.ArtBox.Width / 96.0 * 300.0);
+                            // レンダリングする際の解像度を決める。規定値は300DPI。A2で300DPI相当のデータ量になるように解像度を調整する。
+                            double pageMaxLength = Math.Max(page.Dimensions.ArtBox.Height, page.Dimensions.ArtBox.Width);
+                            double renderResolution = 300.0;
+                            if (pageMaxLength > 1594)
+                            {
+                                renderResolution = 300 / (pageMaxLength / 1594);
+                            }
+                            renderOptions.DestinationWidth = (uint)Math.Round(page.Dimensions.ArtBox.Width / 96.0 * renderResolution);
+                            // ページをレンダリングする。
                             await page.RenderToStreamAsync(stream, renderOptions);
                             PngBitmapDecoder decoder = new PngBitmapDecoder(stream.AsStream(), BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
                             BitmapSource renderedPage = (BitmapSource)decoder.Frames[0];
