@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
+using System.Printing;
 using Windows.Data.Pdf;
 using System.Diagnostics;
 using OpenCvSharp;
@@ -540,6 +541,124 @@ namespace compare_PDF_as_image
 
             chkMove.IsChecked = false;
             ShowPage(displayedPageNumber, displayedPageNumber);
+        }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (pdfPages1.Count < 1) return;
+            if (pdfPages2.Count < 1) return;
+
+            var diag = new PrintDialog();
+            var result = diag.ShowDialog();
+
+            if (result != true) return;
+
+            var printDoc = new FixedDocument();
+
+            int pageNum = Math.Min((int)pdfPages1.Count, (int)pdfPages2.Count);
+            for (int i = 0; i < pageNum; i++)
+            {
+                Mat modifiedMat1 = new Mat();
+                Mat modifiedMat2 = new Mat();
+                OpenCvSharp.Size pageSize1 = pdfPages1[i].Size();
+                OpenCvSharp.Size pageSize2 = pdfPages2[i].Size();
+                if ((pageSize1.Height != pageSize2.Height) || (pageSize1.Width != pageSize2.Width))
+                {
+                    int biggerHeight = Math.Max(pageSize1.Height, pageSize2.Height);
+                    int biggerWidth = Math.Max(pageSize1.Width, pageSize2.Width);
+                    OpenCvSharp.Size adjustedSize = new OpenCvSharp.Size();
+                    adjustedSize.Height = biggerHeight;
+                    adjustedSize.Width = biggerWidth;
+                    Cv2.Resize(pdfPages1[i], modifiedMat1, adjustedSize);
+                    Cv2.Resize(pdfPages2[i], modifiedMat2, adjustedSize);
+                }
+                else
+                {
+                    modifiedMat1 = pdfPages1[i];
+                    modifiedMat2 = pdfPages2[i];
+                }
+
+                // ２つのページの共通部分の画像を作る。
+                Mat msk = new Mat();
+                Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, msk);
+
+                // 比較を表示するための画像を作る。
+                Mat m = new Mat();
+                Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, m);
+                //Cv2.Resize(m, m, new OpenCvSharp.Size(diag.PrintableAreaWidth, diag.PrintableAreaHeight));
+
+                // 比較画像を表示する。
+                BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m);
+                var printImage = new Image();
+                printImage.Source = img;
+
+
+                var printCanvas = new Canvas();
+                //printCanvas.Width = diag.PrintableAreaWidth;
+                //printCanvas.Height = diag.PrintableAreaHeight;
+                printCanvas.Children.Add(printImage);
+
+                var printPage = new FixedPage();
+                printPage.Children.Add(printCanvas);
+                var printContent = new PageContent();
+                printContent.Child = printPage;
+                printDoc.Pages.Add(printContent);
+            }
+            diag.PrintDocument(printDoc.DocumentPaginator, "Print1");
+        }
+
+        private void MenuTiffExport_Click(object sender, RoutedEventArgs e)
+        {
+            if (pdfPages1.Count < 1) return;
+            if (pdfPages2.Count < 1) return;
+
+            var dialog = new Microsoft.Win32.SaveFileDialog();
+            dialog.DefaultExt = ".tif";
+            dialog.Filter = "TIFF files (.tif)|*.tif";
+            bool? result = dialog.ShowDialog();
+            if (result == true)
+            {
+                string filename = dialog.FileName;
+                using (var fs = new FileStream(filename, FileMode.Create))
+                {
+                    var encoder = new TiffBitmapEncoder();
+
+
+                    int pageNum = Math.Min((int)pdfPages1.Count, (int)pdfPages2.Count);
+                    for (int i = 0; i < pageNum; i++)
+                    {
+                        Mat modifiedMat1 = new Mat();
+                        Mat modifiedMat2 = new Mat();
+                        OpenCvSharp.Size pageSize1 = pdfPages1[i].Size();
+                        OpenCvSharp.Size pageSize2 = pdfPages2[i].Size();
+                        if ((pageSize1.Height != pageSize2.Height) || (pageSize1.Width != pageSize2.Width))
+                        {
+                            int biggerHeight = Math.Max(pageSize1.Height, pageSize2.Height);
+                            int biggerWidth = Math.Max(pageSize1.Width, pageSize2.Width);
+                            OpenCvSharp.Size adjustedSize = new OpenCvSharp.Size();
+                            adjustedSize.Height = biggerHeight;
+                            adjustedSize.Width = biggerWidth;
+                            Cv2.Resize(pdfPages1[i], modifiedMat1, adjustedSize);
+                            Cv2.Resize(pdfPages2[i], modifiedMat2, adjustedSize);
+                        }
+                        else
+                        {
+                            modifiedMat1 = pdfPages1[i];
+                            modifiedMat2 = pdfPages2[i];
+                        }
+
+                        Mat msk = new Mat();
+                        Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, msk);
+
+                        Mat m = new Mat();
+                        Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, m);
+
+                        BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m);
+                        encoder.Frames.Add(BitmapFrame.Create(img));
+                    }
+                    encoder.Save(fs);
+                }
+            }
         }
     }
 }
