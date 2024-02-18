@@ -21,8 +21,8 @@
                 <MenuItem Header="Export" Name="menuExport" Click="MenuExport_Click" />
             </MenuItem>
             -->
-            <MenuItem Header="Help">
-                <MenuItem Header="注意事項" Name="menuLicense" Click="MenuLicense_Click" />
+            <MenuItem Header="ヘルプ">
+                <MenuItem Header="このソフトウェアについて" Name="menuLicense" Click="MenuLicense_Click" />
             </MenuItem>
         </Menu>
         <ScrollViewer Name="scvMain" Grid.Row="1" Grid.Column="0" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" MouseMove="ScvMain_MouseMove" PreviewMouseLeftButtonDown="ScvMain_PreviewMouseLeftButtonDown" >
@@ -34,30 +34,28 @@
         <StackPanel Grid.Row="1" Grid.Column="1" Background="White" >
             <GroupBox Header="File1" Margin="5" >
                 <StackPanel Margin="5">
-                    <StackPanel Orientation="Horizontal">
-                        <Button Name="btnOpenFile1" Content="Open" Click="BtnOpenFile1_Click" Tag="1" Width="60" />
-                        <Button Content="Prev" Width="30" Margin="15,0,0,0" IsEnabled="False" />
-                        <TextBlock Text="Page" Width="30" />
-                        <Button Content="Next" Width="30" IsEnabled="False" />
-                    </StackPanel>
+                    <Button Name="btnOpenFile1" Content="File1を開く" Click="BtnOpenFile1_Click" Tag="1" />
                     <TextBlock Name="txtFile1Info" />
                     <TextBlock Name="txtFile1SizeInfo" />
                 </StackPanel>
             </GroupBox>
             <GroupBox Header="File2" Margin="5">
                 <StackPanel Margin="5">
-                    <Button Name="btnOpenFile2" Content="Open" Click="BtnOpenFile1_Click" Tag="2" />
+                    <Button Name="btnOpenFile2" Content="File2を開く" Click="BtnOpenFile1_Click" Tag="2" />
                     <TextBlock Name="txtFile2Info" />
                     <TextBlock Name="txtFile2SizeInfo" />
                     <GroupBox Header="調整">
-                        <CheckBox Name="chkMove" Content="File2を移動" Checked="ChkMove_Checked" Unchecked="ChkMove_Unchecked" />
+                        <StackPanel Orientation="Horizontal" >
+                            <CheckBox Name="chkMove" Content="File2を移動" Checked="ChkMove_Checked" Unchecked="ChkMove_Unchecked" Width="120" />
+                            <Button Name="btnFixPosition" Content="固定" IsEnabled="False" Click="BtnFixPosition_Click" />
+                        </StackPanel>
                     </GroupBox>
                 </StackPanel>
             </GroupBox>
             <StackPanel Orientation="Horizontal" Margin="5">
-                <Button Content="Prev" Width="50" Click="menuPrev_Click" />
+                <Button Name="btnPrev" Content="前" Width="50" Click="menuPrev_Click" />
                 <TextBlock Name="txtPage" Text="Page" Margin="10,5" Width="70" HorizontalAlignment="Center" />
-                <Button Content="Next" Width="50" Click="menuNext_Click" />
+                <Button Name="btnNext" Content="次" Width="50" Click="menuNext_Click" />
             </StackPanel>
             <DockPanel LastChildFill="False" Margin="5" >
                 <Slider Name="sldScale" Width="130" Minimum="12.5" Maximum="200" TickFrequency="12.5" Value="100" TickPlacement="BottomRight" IsSnapToTickEnabled="True" SmallChange="12.5" LargeChange="12.5" ValueChanged="SldScale_ValueChanged" />

@@ -354,14 +354,23 @@ namespace compare_PDF_as_image
 
         private void MenuLicense_Click(object sender, RoutedEventArgs e)
         {
-            string _msg = "このソフトウェアは、 Apache 2.0ライセンスで配布されている製作物が含まれています。";
-            _msg = _msg + "\nhttp://www.apache.org/licenses/LICENSE-2.0";
-            _msg = _msg + "\nこのソフトウェアは、OpenCVSharpおよびそれが依存するソフトウェアを利用しています。";
-            MessageBox.Show(_msg);
+            string msg = "このソフトウェアは、 Apache 2.0ライセンスで配布されている製作物が含まれています。";
+            msg = msg + "\nhttp://www.apache.org/licenses/LICENSE-2.0";
+            msg = msg + "\nこのソフトウェアは、OpenCVSharpおよびそれが依存するソフトウェアを利用しています。";
+            msg = msg + "\n\nこのソフトウェアにはMITライセンスが適用されます。";
+            msg = msg + "\nhttps://licenses.opensource.jp/MIT/MIT.html";
+            msg = msg + "\n(c) 2024 makoto-hiro@GitHub";
+
+            MessageBox.Show(msg);
         }
 
         private void ChkMove_Checked(object sender, RoutedEventArgs e)
         {
+            sldScale.IsEnabled = false;
+            btnPrev.IsEnabled = false;
+            btnNext.IsEnabled = false;
+            btnFixPosition.IsEnabled = true;
+
             int pageNumber1 = displayedPageNumber;
             int pageNumber2 = displayedPageNumber;
             // ページ数が表示の条件に合わない場合は、何もしない。
@@ -419,6 +428,7 @@ namespace compare_PDF_as_image
 
         private void ChkMove_Unchecked(object sender, RoutedEventArgs e)
         {
+
             ShowPage(displayedPageNumber, displayedPageNumber);
 
             double sizeRatio = sldScale.Value / 100;
@@ -432,6 +442,11 @@ namespace compare_PDF_as_image
             imgSub.SetValue(Canvas.LeftProperty,(double)0);
 
             imgSub.Source = null;
+
+            sldScale.IsEnabled = true;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            btnFixPosition.IsEnabled = false;
         }
 
         private void CvsMain_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -472,6 +487,59 @@ namespace compare_PDF_as_image
                 }
             }
 
+        }
+
+        private void BtnFixPosition_Click(object sender, RoutedEventArgs e)
+        {
+            double displayScale = sldScale.Value / 100;
+            double img2PosY = (double)imgSub.GetValue(Canvas.TopProperty) / displayScale;
+            double img2PosX = (double)imgSub.GetValue(Canvas.LeftProperty) / displayScale;
+
+            Mat modifiedMat1 = new Mat();
+            Mat modifiedMat2 = new Mat();
+            double left1 = 0;
+            double left2 = 0;
+            double right1 = 0;
+            double right2 = 0;
+            double top1 = 0;
+            double top2 = 0;
+            double bottom1 = 0;
+            double bottom2 = 0;
+            if (img2PosX < 0)
+            {
+                left1 = img2PosX * -1;
+                left2 = 0;
+                right1 = 0;
+                right2 = img2PosX * -1;
+            }
+            else
+            {
+                left1 = 0;
+                left2 = img2PosX;
+                right1 = img2PosX;
+                right2 = 0;
+            }
+            if (img2PosY < 0)
+            {
+                top1 = img2PosY * -1;
+                top2 = 0;
+                bottom1 = 0;
+                bottom2 = img2PosY * -1;
+            }
+            else
+            {
+                top1 = 0;
+                top2 = img2PosY;
+                bottom1 = img2PosY;
+                bottom2 = 0;
+            }
+            modifiedMat1 = pdfPages1[displayedPageNumber - 1].CopyMakeBorder((int)top1, (int)bottom1, (int)left1, (int)right1, BorderTypes.Constant, 255);
+            modifiedMat2 = pdfPages2[displayedPageNumber - 1].CopyMakeBorder((int)top2, (int)bottom2, (int)left2, (int)right2, BorderTypes.Constant, 255);
+            pdfPages1[displayedPageNumber - 1] = modifiedMat1;
+            pdfPages2[displayedPageNumber - 1] = modifiedMat2;
+
+            chkMove.IsChecked = false;
+            ShowPage(displayedPageNumber, displayedPageNumber);
         }
     }
 }
