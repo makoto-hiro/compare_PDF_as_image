@@ -38,6 +38,8 @@ namespace compare_PDF_as_image
         private List<Mat> pdfPages2 = new List<Mat>();
         private string filePath1 = "";
         private string filePath2 = "";
+        private System.Windows.Point canvasStartPoint;
+        private System.Windows.Point canvasStartPosition;
 
         private async Task ReadPDFtoImage(string filename, string docID)
         {
@@ -130,6 +132,8 @@ namespace compare_PDF_as_image
             // 比較画像を表示する。
             BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m);
             imgMain.Source = img;
+            cvsMain.Width = img.PixelWidth;
+            cvsMain.Height = img.PixelHeight;
 
             // ページ番号を表示する。
             txtPage.Text = "Page " + displayedPageNumber.ToString() + " / " + pdfPages1.Count.ToString();
@@ -213,11 +217,18 @@ namespace compare_PDF_as_image
             {
                 ScrollViewer sc = (ScrollViewer)sender;
                 System.Windows.Point pt = e.GetPosition((ScrollViewer)sender);
-                sc.ScrollToVerticalOffset(startPosition.Y + (pt.Y - startPoint.Y) * -1);
-                sc.ScrollToHorizontalOffset(startPosition.X + (pt.X - startPoint.X) * -1);
+                if (chkMove.IsChecked == false)
+                {
+                    sc.ScrollToVerticalOffset(startPosition.Y + (pt.Y - startPoint.Y) * -1);
+                    sc.ScrollToHorizontalOffset(startPosition.X + (pt.X - startPoint.X) * -1);
 
-                txtPointerInfo.Text = "Mouse LeftButtonDown\n X :" + startPoint.X.ToString() + "\n Y :" + startPoint.Y.ToString();
-                txtPointerInfo.Text = txtPointerInfo.Text + "\nMouseMove\n X : " + pt.X.ToString() + "\n Y : " + pt.Y.ToString();
+                    txtPointerInfo.Text = "Mouse LeftButtonDown\n X :" + startPoint.X.ToString() + "\n Y :" + startPoint.Y.ToString();
+                    txtPointerInfo.Text = txtPointerInfo.Text + "\nMouseMove\n X : " + pt.X.ToString() + "\n Y : " + pt.Y.ToString();
+                }
+                else
+                {
+                    return;
+                }
             }
         }
 
@@ -228,16 +239,24 @@ namespace compare_PDF_as_image
             startPosition = new System.Windows.Point(sc.HorizontalOffset, sc.VerticalOffset);
 
             txtPointerInfo.Text = "Mouse LeftButtonDown\n X :" + startPoint.X.ToString() + "\n Y :" + startPoint.Y.ToString();
+
+            txtPointerInfo.Text = imgSub.GetValue(Canvas.TopProperty).ToString() + ":" + imgSub.GetValue(Canvas.LeftProperty).ToString();
+
         }
 
         private void SldScale_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (e != null)
             {
-                double _ns = e.NewValue / 100;
+                double sizeRatio = e.NewValue / 100;
                 Matrix mx = new Matrix();
-                mx.Scale(_ns, _ns);
+                mx.Scale(sizeRatio, sizeRatio);
+                //imgSub.SetValue(Canvas.TopProperty, (double)imgSub.GetValue(Canvas.TopProperty) * sizeRatio);
+                //imgSub.SetValue(Canvas.LeftProperty, (double)imgSub.GetValue(Canvas.LeftProperty) * sizeRatio);
                 imgMain.LayoutTransform = new MatrixTransform(mx);
+                imgSub.LayoutTransform = new MatrixTransform(mx);
+                cvsMain.Height = imgMain.ActualHeight * sizeRatio;
+                cvsMain.Width = imgMain.ActualWidth * sizeRatio;
             }
         }
 
@@ -339,6 +358,120 @@ namespace compare_PDF_as_image
             _msg = _msg + "\nhttp://www.apache.org/licenses/LICENSE-2.0";
             _msg = _msg + "\nこのソフトウェアは、OpenCVSharpおよびそれが依存するソフトウェアを利用しています。";
             MessageBox.Show(_msg);
+        }
+
+        private void ChkMove_Checked(object sender, RoutedEventArgs e)
+        {
+            int pageNumber1 = displayedPageNumber;
+            int pageNumber2 = displayedPageNumber;
+            // ページ数が表示の条件に合わない場合は、何もしない。
+            if (pageNumber1 < 1) return;
+            if (pdfPages1.Count == 0) return;
+            if (pageNumber1 > pdfPages1.Count) return;
+            if (pdfPages2.Count < pageNumber2) return;
+
+            // ページのピクセルサイズが異なる場合は、page2をリサイズする。
+            Mat modifiedMat1 = new Mat();
+            Mat modifiedMat2 = new Mat();
+            OpenCvSharp.Size pageSize1 = pdfPages1[pageNumber1 - 1].Size();
+            OpenCvSharp.Size pageSize2 = pdfPages2[pageNumber2 - 1].Size();
+            if ((pageSize1.Height != pageSize2.Height) || (pageSize1.Width != pageSize2.Width))
+            {
+                int biggerHeight = Math.Max(pageSize1.Height, pageSize2.Height);
+                int biggerWidth = Math.Max(pageSize1.Width, pageSize2.Width);
+                OpenCvSharp.Size adjustedSize = new OpenCvSharp.Size();
+                adjustedSize.Height = biggerHeight;
+                adjustedSize.Width = biggerWidth;
+                Cv2.Resize(pdfPages1[pageNumber1 - 1], modifiedMat1, adjustedSize);
+                Cv2.Resize(pdfPages2[pageNumber2 - 1], modifiedMat2, adjustedSize);
+            }
+            else
+            {
+                modifiedMat1 = pdfPages1[pageNumber1 - 1];
+                modifiedMat2 = pdfPages2[pageNumber2 - 1];
+            }
+
+            Mat m1 = new Mat();
+            Mat msk1 = new Mat(modifiedMat1.Size(),modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
+            Cv2.Merge(new Mat[] { msk1, modifiedMat1, modifiedMat1 }, m1);
+
+            BitmapSource img1 = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m1);
+            imgMain.Source = img1;
+
+            double sizeRatio = sldScale.Value / 100;
+            Matrix mx = new Matrix();
+            mx.Scale(sizeRatio, sizeRatio);
+            imgMain.LayoutTransform = new MatrixTransform(mx);
+            cvsMain.Height = imgMain.ActualHeight * sizeRatio;
+            cvsMain.Width = imgMain.ActualWidth * sizeRatio;
+
+            Mat m2 = new Mat();
+            Mat msk2 = new Mat(modifiedMat2.Size(), modifiedMat2.Type(), OpenCvSharp.Scalar.All(255));
+            Mat m3 = new Mat();
+            Cv2.BitwiseNot(modifiedMat2, m3);
+            Cv2.Merge(new Mat[] { modifiedMat2, modifiedMat2, msk2, m3}, m2);
+
+            BitmapSource img2 = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m2);
+            imgSub.Source = img2;
+            imgSub.LayoutTransform = new MatrixTransform(mx);
+
+        }
+
+        private void ChkMove_Unchecked(object sender, RoutedEventArgs e)
+        {
+            ShowPage(displayedPageNumber, displayedPageNumber);
+
+            double sizeRatio = sldScale.Value / 100;
+            Matrix mx = new Matrix();
+            mx.Scale(sizeRatio, sizeRatio);
+            imgMain.LayoutTransform = new MatrixTransform(mx);
+            cvsMain.Height = imgMain.ActualHeight * sizeRatio;
+            cvsMain.Width = imgMain.ActualWidth * sizeRatio;
+
+            imgSub.SetValue(Canvas.TopProperty,(double)0);
+            imgSub.SetValue(Canvas.LeftProperty,(double)0);
+
+            imgSub.Source = null;
+        }
+
+        private void CvsMain_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            canvasStartPoint = e.GetPosition((Canvas)sender);
+
+            txtPointerInfo.Text = "Canvas Mouse LeftButtonDown\n X :" + canvasStartPoint.X.ToString() + "\n Y :" + canvasStartPoint.Y.ToString();
+        }
+
+        private void CvsMain_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                Canvas sc = (Canvas)sender;
+                System.Windows.Point pt = e.GetPosition((Canvas)sender);
+                if (chkMove.IsChecked == true)
+                {
+                    //System.Windows.Window mainWindow = System.Windows.Application.Current.MainWindow;
+                    //PresentationSource mainWindowPresentationSource = PresentationSource.FromVisual(mainWindow);
+                    //Matrix m = mainWindowPresentationSource.CompositionTarget.TransformFromDevice;
+                    //double dpiWidthFactor = m.M11;
+                    //double dpiHeightFactor = m.M22;
+
+                    double currentTop = (double)imgSub.GetValue(Canvas.TopProperty);
+                    double currentLeft = (double)imgSub.GetValue(Canvas.LeftProperty);
+
+                    double changedTop = currentTop + pt.Y - canvasStartPoint.Y;
+                    double changedLeft = currentLeft + pt.X - canvasStartPoint.X;
+
+                    imgSub.SetValue(Canvas.TopProperty, changedTop);
+                    imgSub.SetValue(Canvas.LeftProperty, changedLeft);
+
+                    canvasStartPoint = pt;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
         }
     }
 }

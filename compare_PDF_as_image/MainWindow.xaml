@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:pdf_trial"
         mc:Ignorable="d"
-        Title="close_compare_PDF_as_image alpha" Height="450" Width="800" Closing="Window_Closing" Background="LightGray" >
+        Title="compare_PDF_as_image alpha" Height="450" Width="800" Closing="Window_Closing" Background="LightGray" >
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
@@ -26,7 +26,10 @@
             </MenuItem>
         </Menu>
         <ScrollViewer Name="scvMain" Grid.Row="1" Grid.Column="0" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" MouseMove="ScvMain_MouseMove" PreviewMouseLeftButtonDown="ScvMain_PreviewMouseLeftButtonDown" >
-            <Image Name="imgMain" Stretch="None" />
+            <Canvas Name="cvsMain" HorizontalAlignment="Left" VerticalAlignment="Top" PreviewMouseLeftButtonDown="CvsMain_PreviewMouseLeftButtonDown" MouseMove="CvsMain_MouseMove" >
+                <Image Name="imgMain" Stretch="None" />
+                <Image Name="imgSub" Stretch="None" Canvas.Left="0" Canvas.Top="0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+            </Canvas>
         </ScrollViewer>
         <StackPanel Grid.Row="1" Grid.Column="1" Background="White" >
             <GroupBox Header="File1" Margin="5" >
@@ -47,7 +50,7 @@
                     <TextBlock Name="txtFile2Info" />
                     <TextBlock Name="txtFile2SizeInfo" />
                     <GroupBox Header="調整">
-                        <Button Content="時計回りに回転" IsEnabled="False" />
+                        <CheckBox Name="chkMove" Content="File2を移動" Checked="ChkMove_Checked" Unchecked="ChkMove_Unchecked" />
                     </GroupBox>
                 </StackPanel>
             </GroupBox>
