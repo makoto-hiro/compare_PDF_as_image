@@ -50,9 +50,17 @@
                     <TextBlock Name="txtFile2Info" />
                     <TextBlock Name="txtFile2SizeInfo" />
                     <GroupBox Header="調整">
-                        <StackPanel Orientation="Horizontal" >
-                            <CheckBox Name="chkMove" Content="File2を移動" Checked="ChkMove_Checked" Unchecked="ChkMove_Unchecked" Width="120" />
-                            <Button Name="btnFixPosition" Content="固定" IsEnabled="False" Click="BtnFixPosition_Click" />
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" >
+                                <CheckBox Name="chkMove" Content="File2を移動" Checked="ChkMove_Checked" Unchecked="ChkMove_Unchecked" Width="120" />
+                                <Button Name="btnFixPosition" Content="固定" IsEnabled="False" Click="BtnFixPosition_Click" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0" >
+                                <CheckBox Name="chkResize" Content="拡大縮小" Width="80" Checked="ChkResize_Checked" Unchecked="ChkResize_Unchecked" />
+                                <TextBox Name="txtResize" Text="100" Width="30" IsEnabled="False" KeyDown="TxtResize_KeyDown" />
+                                <TextBlock Text="%" />
+                                <Button Name="btnFixResize" Content="固定" IsEnabled="False" />
+                            </StackPanel>
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>
