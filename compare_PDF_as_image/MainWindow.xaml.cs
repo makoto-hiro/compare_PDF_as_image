@@ -43,6 +43,8 @@ namespace compare_PDF_as_image
         private System.Windows.Point canvasStartPosition;
         private Mat display1;
         private Mat display2;
+        private Mat thickness1;
+        private Mat thickness2;
 
         private async Task ReadPDFtoImage(string filename, string docID)
         {
@@ -332,6 +334,10 @@ namespace compare_PDF_as_image
             displayedPageNumber = 1;
             ShowPage(displayedPageNumber, displayedPageNumber);
 
+            chkMove.IsEnabled = true;
+            chkResize.IsEnabled = true;
+            chkLineThickness.IsEnabled = true;
+
         }
 
         private void MenuLicense_Click(object sender, RoutedEventArgs e)
@@ -354,6 +360,7 @@ namespace compare_PDF_as_image
             btnNext.IsEnabled = false;
             btnFixPosition.IsEnabled = true;
             chkResize.IsEnabled = false;
+            chkLineThickness.IsEnabled = false;
 
             int pageNumber1 = displayedPageNumber;
             int pageNumber2 = displayedPageNumber;
@@ -432,6 +439,7 @@ namespace compare_PDF_as_image
             btnNext.IsEnabled = true;
             btnFixPosition.IsEnabled = false;
             chkResize.IsEnabled = true;
+            chkLineThickness.IsEnabled = true;
         }
 
         private void CvsMain_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -525,6 +533,7 @@ namespace compare_PDF_as_image
 
             chkMove.IsChecked = false;
             chkResize.IsEnabled = true;
+            chkLineThickness.IsEnabled = true;
             ShowPage(displayedPageNumber, displayedPageNumber);
         }
 
@@ -655,6 +664,7 @@ namespace compare_PDF_as_image
             txtResize.IsEnabled = true;
             btnFixResize.IsEnabled = false;
             chkMove.IsEnabled = false;
+            chkLineThickness.IsEnabled = false;
         }
 
         private void ChkResize_Unchecked(object sender, RoutedEventArgs e)
@@ -680,6 +690,7 @@ namespace compare_PDF_as_image
             btnFixPosition.IsEnabled = false;
             txtResize.IsEnabled = false;
             btnFixResize.IsEnabled = false;
+            chkLineThickness.IsEnabled = true;
         }
 
         private void TxtResize_KeyDown(object sender, KeyEventArgs e)
@@ -797,6 +808,7 @@ namespace compare_PDF_as_image
             chkResize.IsChecked = false;
             txtResize.IsEnabled = false;
             btnFixResize.IsEnabled = false;
+            chkLineThickness.IsEnabled = true;
         }
 
         private void MenuPNGExport_Click(object sender, RoutedEventArgs e)
@@ -845,6 +857,152 @@ namespace compare_PDF_as_image
                     encoder.Save(fs);
                 }
             }
+        }
+
+        private void ChkLineThickness_Checked(object sender, RoutedEventArgs e)
+        {
+            chkMove.IsEnabled = false;
+            chkResize.IsEnabled = false;
+            btnThickness1.IsEnabled = true;
+            btnThickness2.IsEnabled = true;
+            btnFixThickness.IsEnabled = true;
+        }
+
+        private void ChkLineThickness_Unchecked(object sender, RoutedEventArgs e)
+        {
+            ShowPage(displayedPageNumber, displayedPageNumber);
+
+            double sizeRatio = sldScale.Value / 100;
+            Matrix mx = new Matrix();
+            mx.Scale(sizeRatio, sizeRatio);
+            imgMain.LayoutTransform = new MatrixTransform(mx);
+            cvsMain.Height = imgMain.ActualHeight * sizeRatio;
+            cvsMain.Width = imgMain.ActualWidth * sizeRatio;
+
+            imgSub.SetValue(Canvas.TopProperty, (double)0);
+            imgSub.SetValue(Canvas.LeftProperty, (double)0);
+
+            imgSub.Source = null;
+            thickness1 = null;
+            thickness2 = null;
+
+            chkMove.IsEnabled = true;
+            chkResize.IsEnabled = true;
+            btnThickness1.IsEnabled = false;
+            btnThickness2.IsEnabled = false;
+            btnFixThickness.IsEnabled = false;
+        }
+
+        private void BtnThickness_Click(object sender, RoutedEventArgs e)
+        {
+            int pageNumber1 = displayedPageNumber;
+            int pageNumber2 = displayedPageNumber;
+            // ページ数が表示の条件に合わない場合は、何もしない。
+            if (pageNumber1 < 1) return;
+            if (pdfPages1.Count == 0) return;
+            if (pageNumber1 > pdfPages1.Count) return;
+            if (pdfPages2.Count < pageNumber2) return;
+
+            Mat modifiedMat1 = new Mat();
+            Mat modifiedMat2 = new Mat();
+
+            if (thickness1 == null || thickness2 == null)
+            {
+                OpenCvSharp.Size pageSize1 = pdfPages1[pageNumber1 - 1].Size();
+                OpenCvSharp.Size pageSize2 = pdfPages2[pageNumber2 - 1].Size();
+                if ((pageSize1.Height != pageSize2.Height) || (pageSize1.Width != pageSize2.Width))
+                {
+                    int biggerHeight = Math.Max(pageSize1.Height, pageSize2.Height);
+                    int biggerWidth = Math.Max(pageSize1.Width, pageSize2.Width);
+                    OpenCvSharp.Size adjustedSize = new OpenCvSharp.Size();
+                    adjustedSize.Height = biggerHeight;
+                    adjustedSize.Width = biggerWidth;
+                    Cv2.Resize(pdfPages1[pageNumber1 - 1], modifiedMat1, adjustedSize);
+                    Cv2.Resize(pdfPages2[pageNumber2 - 1], modifiedMat2, adjustedSize);
+                }
+                else
+                {
+                    modifiedMat1 = pdfPages1[pageNumber1 - 1].Clone();
+                    modifiedMat2 = pdfPages2[pageNumber2 - 1].Clone();
+                }
+            }
+            else
+            {
+                modifiedMat1 = thickness1.Clone();
+                modifiedMat2 = thickness2.Clone();
+            }
+
+            string selectedFileTag = ((Button)sender).Tag.ToString();
+            if (selectedFileTag == "1")
+            {
+                Cv2.Erode(modifiedMat1, modifiedMat1, new Mat(new OpenCvSharp.Size(3, 3), MatType.CV_8UC1));
+            }
+            else
+            {
+                Cv2.Erode(modifiedMat2, modifiedMat2, new Mat(new OpenCvSharp.Size(3, 3), MatType.CV_8UC1));
+            }
+
+            Mat m1 = new Mat();
+            Mat msk1 = new Mat(modifiedMat1.Size(), modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
+            Cv2.Merge(new Mat[] { msk1, modifiedMat1, modifiedMat1 }, m1);
+
+            BitmapSource img1 = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m1);
+            imgMain.Source = img1;
+
+            double sizeRatio = sldScale.Value / 100;
+            Matrix mx = new Matrix();
+            mx.Scale(sizeRatio, sizeRatio);
+            imgMain.LayoutTransform = new MatrixTransform(mx);
+            cvsMain.Height = imgMain.ActualHeight * sizeRatio;
+            cvsMain.Width = imgMain.ActualWidth * sizeRatio;
+
+            Mat m2 = new Mat();
+            Mat msk2 = new Mat(modifiedMat2.Size(), modifiedMat2.Type(), OpenCvSharp.Scalar.All(255));
+            Mat m3 = new Mat();
+            Cv2.BitwiseNot(modifiedMat2, m3);
+            Cv2.Merge(new Mat[] { modifiedMat2, modifiedMat2, msk2, m3 }, m2);
+
+            BitmapSource img2 = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m2);
+            imgSub.Source = img2;
+            imgSub.LayoutTransform = new MatrixTransform(mx);
+
+            thickness1 = modifiedMat1.Clone();
+            thickness2 = modifiedMat2.Clone();
+        }
+
+        private void BtnFixThickness_Click(object sender, RoutedEventArgs e)
+        {
+            pdfPages1[displayedPageNumber - 1] = thickness1.Clone();
+            pdfPages2[displayedPageNumber - 1] = thickness2.Clone();
+
+            ShowPage(displayedPageNumber, displayedPageNumber);
+
+            double sizeRatio = sldScale.Value / 100;
+            Matrix mx = new Matrix();
+            mx.Scale(sizeRatio, sizeRatio);
+            imgMain.LayoutTransform = new MatrixTransform(mx);
+            cvsMain.Height = imgMain.ActualHeight * sizeRatio;
+            cvsMain.Width = imgMain.ActualWidth * sizeRatio;
+
+            imgSub.SetValue(Canvas.TopProperty, (double)0);
+            imgSub.SetValue(Canvas.LeftProperty, (double)0);
+
+            imgSub.Source = null;
+            thickness1 = null;
+            thickness2 = null;
+
+            sldScale.IsEnabled = true;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            chkMove.IsEnabled = true;
+            chkResize.IsEnabled = true;
+            chkLineThickness.IsEnabled = true;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            sldScale.IsEnabled = true;
+            btnThickness1.IsEnabled = false;
+            btnThickness2.IsEnabled = false;
+            btnFixThickness.IsEnabled = false;
         }
     }
 }

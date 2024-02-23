@@ -48,14 +48,20 @@
                     <GroupBox Header="調整">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" >
-                                <CheckBox Name="chkMove" Content="File2を移動" Checked="ChkMove_Checked" Unchecked="ChkMove_Unchecked" Width="120" />
+                                <CheckBox Name="chkMove" Content="File2を移動" Checked="ChkMove_Checked" Unchecked="ChkMove_Unchecked" Width="120" IsEnabled="False" />
                                 <Button Name="btnFixPosition" Content="固定" IsEnabled="False" Click="BtnFixPosition_Click" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,5,0,0" >
-                                <CheckBox Name="chkResize" Content="拡大縮小" Width="80" Checked="ChkResize_Checked" Unchecked="ChkResize_Unchecked" />
+                                <CheckBox Name="chkResize" Content="拡大縮小" Width="80" Checked="ChkResize_Checked" Unchecked="ChkResize_Unchecked" IsEnabled="False" />
                                 <TextBox Name="txtResize" Text="100" Width="30" IsEnabled="False" KeyDown="TxtResize_KeyDown" />
                                 <TextBlock Text="%" />
                                 <Button Name="btnFixResize" Content="固定" IsEnabled="False" Click="BtnFixResize_Click" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <CheckBox Name="chkLineThickness" Content="線太く" Width="55" Checked="ChkLineThickness_Checked" Unchecked="ChkLineThickness_Unchecked" IsEnabled="False" />
+                                <Button Name="btnThickness1" Content="File1" Tag="1" IsEnabled="False" Click="BtnThickness_Click"/>
+                                <Button Name="btnThickness2" Content="File2" Tag="2" IsEnabled="False" Click="BtnThickness_Click" Margin="5,0,0,0" />
+                                <Button Name="btnFixThickness" Content="固定" IsEnabled="False" Margin="5,0,0,0" Click="BtnFixThickness_Click" />
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
