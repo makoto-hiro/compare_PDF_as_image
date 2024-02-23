@@ -16,15 +16,11 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
-            <!--
-            <MenuItem Header="File">
-                <MenuItem Header="Export" Name="menuExport" Click="MenuExport_Click" />
-            </MenuItem>
-            -->
             <MenuItem Header="出力">
                 <MenuItem Header="印刷" Click="MenuItem_Click" IsEnabled="False" />
                 <Separator />
-                <MenuItem Name="menuTiffExport" Header="Tiffファイルに保存" Click="MenuTiffExport_Click" />
+                <MenuItem Name="menuTiffExport" Header="全ページの結果をTiffファイルに保存" Click="MenuTiffExport_Click" />
+                <MenuItem Name="menuPNGExport" Header="表示中のページの結果をPNGファイルに保存" Click="MenuPNGExport_Click" />
             </MenuItem>
             <MenuItem Header="ヘルプ">
                 <MenuItem Header="このソフトウェアについて" Name="menuLicense" Click="MenuLicense_Click" />

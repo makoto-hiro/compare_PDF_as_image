@@ -180,27 +180,6 @@ namespace compare_PDF_as_image
             }
         }
 
-        private void MenuExport_Click(object sender, RoutedEventArgs e)
-        {
-            if (pdfPages1.Count < 1) return;
-
-            var dialog = new Microsoft.Win32.SaveFileDialog();
-            dialog.DefaultExt = ".png";
-            dialog.Filter = "PNG files (.png)|*.png";
-            bool? result = dialog.ShowDialog();
-            if (result == true)
-            {
-                string filename = dialog.FileName;
-                using (var fs = new FileStream(filename, FileMode.Create))
-                {
-                    PngBitmapEncoder encoder = new PngBitmapEncoder();
-                    BitmapSource img = WriteableBitmapConverter.ToWriteableBitmap(pdfPages1[displayedPageNumber - 1]);
-                    encoder.Frames.Add(BitmapFrame.Create(img));
-                    encoder.Save(fs);
-                }
-            }
-        }
-
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = true;
@@ -818,6 +797,54 @@ namespace compare_PDF_as_image
             chkResize.IsChecked = false;
             txtResize.IsEnabled = false;
             btnFixResize.IsEnabled = false;
+        }
+
+        private void MenuPNGExport_Click(object sender, RoutedEventArgs e)
+        {
+            if (pdfPages1.Count < 1) return;
+
+            var dialog = new Microsoft.Win32.SaveFileDialog();
+            dialog.DefaultExt = ".png";
+            dialog.Filter = "PNG files (.png)|*.png";
+            bool? result = dialog.ShowDialog();
+            if (result == true)
+            {
+                string filename = dialog.FileName;
+                using (var fs = new FileStream(filename, FileMode.Create))
+                {
+                    PngBitmapEncoder encoder = new PngBitmapEncoder();
+
+                    Mat modifiedMat1 = new Mat();
+                    Mat modifiedMat2 = new Mat();
+                    OpenCvSharp.Size pageSize1 = pdfPages1[displayedPageNumber - 1].Size();
+                    OpenCvSharp.Size pageSize2 = pdfPages2[displayedPageNumber - 1].Size();
+                    if ((pageSize1.Height != pageSize2.Height) || (pageSize1.Width != pageSize2.Width))
+                    {
+                        int biggerHeight = Math.Max(pageSize1.Height, pageSize2.Height);
+                        int biggerWidth = Math.Max(pageSize1.Width, pageSize2.Width);
+                        OpenCvSharp.Size adjustedSize = new OpenCvSharp.Size();
+                        adjustedSize.Height = biggerHeight;
+                        adjustedSize.Width = biggerWidth;
+                        Cv2.Resize(pdfPages1[displayedPageNumber - 1], modifiedMat1, adjustedSize);
+                        Cv2.Resize(pdfPages2[displayedPageNumber - 1], modifiedMat2, adjustedSize);
+                    }
+                    else
+                    {
+                        modifiedMat1 = pdfPages1[displayedPageNumber - 1];
+                        modifiedMat2 = pdfPages2[displayedPageNumber - 1];
+                    }
+
+                    Mat msk = new Mat();
+                    Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, msk);
+
+                    Mat m = new Mat();
+                    Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, m);
+
+                    BitmapSource img = WriteableBitmapConverter.ToWriteableBitmap(m);
+                    encoder.Frames.Add(BitmapFrame.Create(img));
+                    encoder.Save(fs);
+                }
+            }
         }
     }
 }
