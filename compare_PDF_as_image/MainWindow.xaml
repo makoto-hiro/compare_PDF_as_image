@@ -59,7 +59,7 @@
                                 <CheckBox Name="chkResize" Content="拡大縮小" Width="80" Checked="ChkResize_Checked" Unchecked="ChkResize_Unchecked" />
                                 <TextBox Name="txtResize" Text="100" Width="30" IsEnabled="False" KeyDown="TxtResize_KeyDown" />
                                 <TextBlock Text="%" />
-                                <Button Name="btnFixResize" Content="固定" IsEnabled="False" />
+                                <Button Name="btnFixResize" Content="固定" IsEnabled="False" Click="BtnFixResize_Click" />
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>

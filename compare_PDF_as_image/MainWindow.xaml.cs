@@ -41,6 +41,8 @@ namespace compare_PDF_as_image
         private string filePath2 = "";
         private System.Windows.Point canvasStartPoint;
         private System.Windows.Point canvasStartPosition;
+        private Mat display1;
+        private Mat display2;
 
         private async Task ReadPDFtoImage(string filename, string docID)
         {
@@ -371,6 +373,7 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = false;
             btnNext.IsEnabled = false;
             btnFixPosition.IsEnabled = true;
+            chkResize.IsEnabled = false;
 
             int pageNumber1 = displayedPageNumber;
             int pageNumber2 = displayedPageNumber;
@@ -448,6 +451,7 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = true;
             btnNext.IsEnabled = true;
             btnFixPosition.IsEnabled = false;
+            chkResize.IsEnabled = true;
         }
 
         private void CvsMain_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -540,6 +544,7 @@ namespace compare_PDF_as_image
             pdfPages2[displayedPageNumber - 1] = modifiedMat2;
 
             chkMove.IsChecked = false;
+            chkResize.IsEnabled = true;
             ShowPage(displayedPageNumber, displayedPageNumber);
         }
 
@@ -669,6 +674,7 @@ namespace compare_PDF_as_image
             btnFixPosition.IsEnabled = false;
             txtResize.IsEnabled = true;
             btnFixResize.IsEnabled = false;
+            chkMove.IsEnabled = false;
         }
 
         private void ChkResize_Unchecked(object sender, RoutedEventArgs e)
@@ -690,6 +696,7 @@ namespace compare_PDF_as_image
             sldScale.IsEnabled = true;
             btnPrev.IsEnabled = true;
             btnNext.IsEnabled = true;
+            chkMove.IsEnabled = true;
             btnFixPosition.IsEnabled = false;
             txtResize.IsEnabled = false;
             btnFixResize.IsEnabled = false;
@@ -768,6 +775,48 @@ namespace compare_PDF_as_image
             BitmapSource img2 = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m4);
             imgSub.Source = img2;
             imgSub.LayoutTransform = new MatrixTransform(mx);
+
+            display1 = m1;
+            display2 = m4;
+        }
+
+        private void BtnFixResize_Click(object sender, RoutedEventArgs e)
+        {
+            OpenCvSharp.Size s1 = display1.Size();
+            OpenCvSharp.Size s2 = display2.Size();
+
+            double lengthWidth = Math.Abs(s1.Width - s2.Width);
+            double lengthHeight = Math.Abs(s1.Height - s2.Height);
+
+            if (s1.Width != s2.Width)
+            {
+                var resizedMat = new Mat();
+                resizedMat = pdfPages2[displayedPageNumber-1].CopyMakeBorder(0, (int)lengthHeight, 0, (int)lengthWidth, BorderTypes.Constant, 255);
+                pdfPages2[displayedPageNumber - 1] = resizedMat;
+            }
+
+            ShowPage(displayedPageNumber, displayedPageNumber);
+
+            double sizeRatio = sldScale.Value / 100;
+            Matrix mx = new Matrix();
+            mx.Scale(sizeRatio, sizeRatio);
+            imgMain.LayoutTransform = new MatrixTransform(mx);
+            cvsMain.Height = imgMain.ActualHeight * sizeRatio;
+            cvsMain.Width = imgMain.ActualWidth * sizeRatio;
+
+            imgSub.SetValue(Canvas.TopProperty, (double)0);
+            imgSub.SetValue(Canvas.LeftProperty, (double)0);
+
+            imgSub.Source = null;
+
+            sldScale.IsEnabled = true;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            chkMove.IsEnabled = true;
+            btnFixPosition.IsEnabled = false;
+            chkResize.IsChecked = false;
+            txtResize.IsEnabled = false;
+            btnFixResize.IsEnabled = false;
         }
     }
 }
