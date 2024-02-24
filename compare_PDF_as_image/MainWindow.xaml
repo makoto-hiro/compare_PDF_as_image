@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
         <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <MenuItem Header="出力">
-                <MenuItem Header="印刷" Click="MenuItem_Click" IsEnabled="False" />
+                <MenuItem Header="印刷はできないのでファイルに出力してください" Click="MenuItem_Click" IsEnabled="False" />
                 <Separator />
                 <MenuItem Name="menuTiffExport" Header="全ページの結果をTiffファイルに保存" Click="MenuTiffExport_Click" />
                 <MenuItem Name="menuPNGExport" Header="表示中のページの結果をPNGファイルに保存" Click="MenuPNGExport_Click" />
@@ -35,14 +35,14 @@
         <StackPanel Grid.Row="1" Grid.Column="1" Background="White" >
             <GroupBox Header="File1" Margin="5" >
                 <StackPanel Margin="5">
-                    <Button Name="btnOpenFile1" Content="File1を開く" Click="BtnOpenFile1_Click" Tag="1" />
+                    <Button Name="btnOpenFile1" Content="File1を開く" Click="BtnOpenFile_Click" Tag="1" />
                     <TextBlock Name="txtFile1Info" />
                     <TextBlock Name="txtFile1SizeInfo" />
                 </StackPanel>
             </GroupBox>
             <GroupBox Header="File2" Margin="5">
                 <StackPanel Margin="5">
-                    <Button Name="btnOpenFile2" Content="File2を開く" Click="BtnOpenFile1_Click" Tag="2" />
+                    <Button Name="btnOpenFile2" Content="File2を開く" Click="BtnOpenFile_Click" Tag="2" />
                     <TextBlock Name="txtFile2Info" />
                     <TextBlock Name="txtFile2SizeInfo" />
                     <GroupBox Header="調整">
@@ -68,9 +68,9 @@
                 </StackPanel>
             </GroupBox>
             <StackPanel Orientation="Horizontal" Margin="5">
-                <Button Name="btnPrev" Content="前" Width="50" Click="menuPrev_Click" />
+                <Button Name="btnPrev" Content="前" Width="50" Click="BtnPrev_Click" />
                 <TextBlock Name="txtPage" Text="Page" Margin="10,5" Width="70" HorizontalAlignment="Center" />
-                <Button Name="btnNext" Content="次" Width="50" Click="menuNext_Click" />
+                <Button Name="btnNext" Content="次" Width="50" Click="BtnNext_Click" />
             </StackPanel>
             <DockPanel LastChildFill="False" Margin="5" >
                 <Slider Name="sldScale" Width="130" Minimum="12.5" Maximum="200" TickFrequency="12.5" Value="100" TickPlacement="BottomRight" IsSnapToTickEnabled="True" SmallChange="12.5" LargeChange="12.5" ValueChanged="SldScale_ValueChanged" />
