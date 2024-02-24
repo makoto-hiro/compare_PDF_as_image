@@ -979,8 +979,11 @@ namespace compare_PDF_as_image
 
         private void BtnFixThickness_Click(object sender, RoutedEventArgs e)
         {
-            pdfPages1[displayedPageNumber - 1] = thickness1.Clone();
-            pdfPages2[displayedPageNumber - 1] = thickness2.Clone();
+            if (thickness1 != null && thickness2 != null)
+            {
+                pdfPages1[displayedPageNumber - 1] = thickness1.Clone();
+                pdfPages2[displayedPageNumber - 1] = thickness2.Clone();
+            }
 
             ShowPage(displayedPageNumber, displayedPageNumber);
 
