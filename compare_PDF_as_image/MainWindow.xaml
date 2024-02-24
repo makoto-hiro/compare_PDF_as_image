@@ -68,12 +68,12 @@
                 </StackPanel>
             </GroupBox>
             <StackPanel Orientation="Horizontal" Margin="5">
-                <Button Name="btnPrev" Content="前" Width="50" Click="BtnPrev_Click" />
+                <Button Name="btnPrev" Content="前" Width="50" Click="BtnPrev_Click" IsEnabled="False" />
                 <TextBlock Name="txtPage" Text="Page" Margin="10,5" Width="70" HorizontalAlignment="Center" />
-                <Button Name="btnNext" Content="次" Width="50" Click="BtnNext_Click" />
+                <Button Name="btnNext" Content="次" Width="50" Click="BtnNext_Click" IsEnabled="False" />
             </StackPanel>
             <DockPanel LastChildFill="False" Margin="5" >
-                <Slider Name="sldScale" Width="130" Minimum="12.5" Maximum="200" TickFrequency="12.5" Value="100" TickPlacement="BottomRight" IsSnapToTickEnabled="True" SmallChange="12.5" LargeChange="12.5" ValueChanged="SldScale_ValueChanged" />
+                <Slider Name="sldScale" Width="130" Minimum="12.5" Maximum="200" TickFrequency="12.5" Value="100" TickPlacement="BottomRight" IsSnapToTickEnabled="True" SmallChange="12.5" LargeChange="12.5" ValueChanged="SldScale_ValueChanged" IsEnabled="False" />
                 <TextBlock Name="txtScale" Text="{Binding ElementName=sldScale, Path=Value}"  DockPanel.Dock="Right" />
             </DockPanel>
             <TextBlock Name="txtInfo" />

@@ -538,6 +538,9 @@ namespace compare_PDF_as_image
             chkMove.IsEnabled = true;
             chkResize.IsEnabled = true;
             chkLineThickness.IsEnabled = true;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            sldScale.IsEnabled = true;
 
         }
 
@@ -569,12 +572,12 @@ namespace compare_PDF_as_image
 
         private void ChkMove_Checked(object sender, RoutedEventArgs e)
         {
-            sldScale.IsEnabled = false;
-            btnPrev.IsEnabled = false;
-            btnNext.IsEnabled = false;
             btnFixPosition.IsEnabled = true;
             chkResize.IsEnabled = false;
             chkLineThickness.IsEnabled = false;
+            btnPrev.IsEnabled = false;
+            btnNext.IsEnabled = false;
+            sldScale.IsEnabled = false;
 
             int pageNumber1 = displayedPageNumber;
             int pageNumber2 = displayedPageNumber;
@@ -648,12 +651,12 @@ namespace compare_PDF_as_image
 
             imgSub.Source = null;
 
-            sldScale.IsEnabled = true;
-            btnPrev.IsEnabled = true;
-            btnNext.IsEnabled = true;
             btnFixPosition.IsEnabled = false;
             chkResize.IsEnabled = true;
             chkLineThickness.IsEnabled = true;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            sldScale.IsEnabled = true;
         }
 
         private void BtnFixPosition_Click(object sender, RoutedEventArgs e)
@@ -705,22 +708,25 @@ namespace compare_PDF_as_image
             pdfPages1[displayedPageNumber - 1] = modifiedMat1;
             pdfPages2[displayedPageNumber - 1] = modifiedMat2;
 
+            ShowPage(displayedPageNumber, displayedPageNumber);
+
             chkMove.IsChecked = false;
+            btnFixPosition.IsEnabled = false;
             chkResize.IsEnabled = true;
             chkLineThickness.IsEnabled = true;
-            ShowPage(displayedPageNumber, displayedPageNumber);
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            sldScale.IsEnabled = true;
         }
 
         private void ChkResize_Checked(object sender, RoutedEventArgs e)
         {
-            sldScale.IsEnabled = false;
+            chkMove.IsEnabled = false;
+            txtResize.IsEnabled = true;
+            chkLineThickness.IsEnabled = false;
             btnPrev.IsEnabled = false;
             btnNext.IsEnabled = false;
-            btnFixPosition.IsEnabled = false;
-            txtResize.IsEnabled = true;
-            btnFixResize.IsEnabled = false;
-            chkMove.IsEnabled = false;
-            chkLineThickness.IsEnabled = false;
+            sldScale.IsEnabled = false;
         }
 
         private void ChkResize_Unchecked(object sender, RoutedEventArgs e)
@@ -739,14 +745,13 @@ namespace compare_PDF_as_image
 
             imgSub.Source = null;
 
-            sldScale.IsEnabled = true;
-            btnPrev.IsEnabled = true;
-            btnNext.IsEnabled = true;
             chkMove.IsEnabled = true;
-            btnFixPosition.IsEnabled = false;
             txtResize.IsEnabled = false;
             btnFixResize.IsEnabled = false;
             chkLineThickness.IsEnabled = true;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            sldScale.IsEnabled = true;
         }
 
         private void TxtResize_KeyDown(object sender, KeyEventArgs e)
@@ -764,7 +769,9 @@ namespace compare_PDF_as_image
                 txtPointerInfo.Text = "50～150の数値を入力してください。";
                 return;
             }
+
             btnFixResize.IsEnabled = true;
+
             txtPointerInfo.Text = targetRatio.ToString();
 
             int pageNumber1 = displayedPageNumber;
@@ -856,15 +863,14 @@ namespace compare_PDF_as_image
 
             imgSub.Source = null;
 
-            sldScale.IsEnabled = true;
-            btnPrev.IsEnabled = true;
-            btnNext.IsEnabled = true;
             chkMove.IsEnabled = true;
-            btnFixPosition.IsEnabled = false;
             chkResize.IsChecked = false;
             txtResize.IsEnabled = false;
             btnFixResize.IsEnabled = false;
             chkLineThickness.IsEnabled = true;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            sldScale.IsEnabled = true;
         }
 
         private void ChkLineThickness_Checked(object sender, RoutedEventArgs e)
@@ -874,6 +880,9 @@ namespace compare_PDF_as_image
             btnThickness1.IsEnabled = true;
             btnThickness2.IsEnabled = true;
             btnFixThickness.IsEnabled = true;
+            btnPrev.IsEnabled = false;
+            btnNext.IsEnabled = false;
+            sldScale.IsEnabled = false;
         }
 
         private void ChkLineThickness_Unchecked(object sender, RoutedEventArgs e)
@@ -899,6 +908,9 @@ namespace compare_PDF_as_image
             btnThickness1.IsEnabled = false;
             btnThickness2.IsEnabled = false;
             btnFixThickness.IsEnabled = false;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            sldScale.IsEnabled = true;
         }
 
         private void BtnThickness_Click(object sender, RoutedEventArgs e)
@@ -986,19 +998,15 @@ namespace compare_PDF_as_image
             thickness1 = null;
             thickness2 = null;
 
-            sldScale.IsEnabled = true;
-            btnPrev.IsEnabled = true;
-            btnNext.IsEnabled = true;
             chkMove.IsEnabled = true;
             chkResize.IsEnabled = true;
-            chkLineThickness.IsEnabled = true;
             chkLineThickness.IsChecked = false;
-            btnPrev.IsEnabled = true;
-            btnNext.IsEnabled = true;
-            sldScale.IsEnabled = true;
             btnThickness1.IsEnabled = false;
             btnThickness2.IsEnabled = false;
             btnFixThickness.IsEnabled = false;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            sldScale.IsEnabled = true;
         }
     }
 }
