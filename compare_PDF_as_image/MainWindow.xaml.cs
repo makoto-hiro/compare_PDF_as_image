@@ -45,6 +45,12 @@ namespace compare_PDF_as_image
         private Mat thickness1;
         private Mat thickness2;
 
+        /// <summary>
+        /// m1とm2に指定したMatのサイズが異なる場合に、m2のサイズをm1に合わせてリサイズする。
+        /// </summary>
+        /// <param name="m1"></param>
+        /// <param name="m2"></param>
+        /// <returns></returns>
         private List<Mat> AdjustMatSize(Mat m1, Mat m2)
         {
             var adjustedM1 = new Mat();
@@ -136,25 +142,11 @@ namespace compare_PDF_as_image
             if (pdfPages2.Count < pageNumber2) return;
 
             // ページのピクセルサイズが異なる場合は、page2をリサイズする。
-            Mat modifiedMat1 = new Mat();
-            Mat modifiedMat2 = new Mat();
-            OpenCvSharp.Size pageSize1 = pdfPages1[pageNumber1 - 1].Size();
-            OpenCvSharp.Size pageSize2 = pdfPages2[pageNumber2 - 1].Size();
-            if ((pageSize1.Height != pageSize2.Height) || (pageSize1.Width != pageSize2.Width))
-            {
-                int biggerHeight = Math.Max(pageSize1.Height, pageSize2.Height);
-                int biggerWidth = Math.Max(pageSize1.Width, pageSize2.Width);
-                OpenCvSharp.Size adjustedSize = new OpenCvSharp.Size();
-                adjustedSize.Height = biggerHeight;
-                adjustedSize.Width = biggerWidth;
-                Cv2.Resize(pdfPages1[pageNumber1 - 1], modifiedMat1, adjustedSize);
-                Cv2.Resize(pdfPages2[pageNumber2 - 1], modifiedMat2, adjustedSize);
-            }
-            else
-            {
-                modifiedMat1 = pdfPages1[pageNumber1 - 1];
-                modifiedMat2 = pdfPages2[pageNumber2 - 1];
-            }
+            var modifiedMat1 = new Mat();
+            var modifiedMat2 = new Mat();
+            List<Mat> mats = AdjustMatSize(pdfPages1[pageNumber1 - 1], pdfPages2[pageNumber2 - 1]);
+            modifiedMat1 = mats[0].Clone();
+            modifiedMat2 = mats[1].Clone();
 
             // ２つのページの共通部分の画像を作る。
             Mat msk = new Mat();
@@ -296,34 +288,19 @@ namespace compare_PDF_as_image
                 {
                     var encoder = new TiffBitmapEncoder();
 
-
                     int pageNum = Math.Min((int)pdfPages1.Count, (int)pdfPages2.Count);
                     for (int i = 0; i < pageNum; i++)
                     {
-                        Mat modifiedMat1 = new Mat();
-                        Mat modifiedMat2 = new Mat();
-                        OpenCvSharp.Size pageSize1 = pdfPages1[i].Size();
-                        OpenCvSharp.Size pageSize2 = pdfPages2[i].Size();
-                        if ((pageSize1.Height != pageSize2.Height) || (pageSize1.Width != pageSize2.Width))
-                        {
-                            int biggerHeight = Math.Max(pageSize1.Height, pageSize2.Height);
-                            int biggerWidth = Math.Max(pageSize1.Width, pageSize2.Width);
-                            OpenCvSharp.Size adjustedSize = new OpenCvSharp.Size();
-                            adjustedSize.Height = biggerHeight;
-                            adjustedSize.Width = biggerWidth;
-                            Cv2.Resize(pdfPages1[i], modifiedMat1, adjustedSize);
-                            Cv2.Resize(pdfPages2[i], modifiedMat2, adjustedSize);
-                        }
-                        else
-                        {
-                            modifiedMat1 = pdfPages1[i];
-                            modifiedMat2 = pdfPages2[i];
-                        }
+                        var modifiedMat1 = new Mat();
+                        var modifiedMat2 = new Mat();
+                        List<Mat> mats = AdjustMatSize(pdfPages1[i], pdfPages2[i]);
+                        modifiedMat1 = mats[0].Clone();
+                        modifiedMat2 = mats[1].Clone();
 
-                        Mat msk = new Mat();
+                        var msk = new Mat();
                         Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, msk);
 
-                        Mat m = new Mat();
+                        var m = new Mat();
                         Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, m);
 
                         BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m);
@@ -349,25 +326,11 @@ namespace compare_PDF_as_image
                 {
                     PngBitmapEncoder encoder = new PngBitmapEncoder();
 
-                    Mat modifiedMat1 = new Mat();
-                    Mat modifiedMat2 = new Mat();
-                    OpenCvSharp.Size pageSize1 = pdfPages1[displayedPageNumber - 1].Size();
-                    OpenCvSharp.Size pageSize2 = pdfPages2[displayedPageNumber - 1].Size();
-                    if ((pageSize1.Height != pageSize2.Height) || (pageSize1.Width != pageSize2.Width))
-                    {
-                        int biggerHeight = Math.Max(pageSize1.Height, pageSize2.Height);
-                        int biggerWidth = Math.Max(pageSize1.Width, pageSize2.Width);
-                        OpenCvSharp.Size adjustedSize = new OpenCvSharp.Size();
-                        adjustedSize.Height = biggerHeight;
-                        adjustedSize.Width = biggerWidth;
-                        Cv2.Resize(pdfPages1[displayedPageNumber - 1], modifiedMat1, adjustedSize);
-                        Cv2.Resize(pdfPages2[displayedPageNumber - 1], modifiedMat2, adjustedSize);
-                    }
-                    else
-                    {
-                        modifiedMat1 = pdfPages1[displayedPageNumber - 1];
-                        modifiedMat2 = pdfPages2[displayedPageNumber - 1];
-                    }
+                    var modifiedMat1 = new Mat();
+                    var modifiedMat2 = new Mat();
+                    List<Mat> mats = AdjustMatSize(pdfPages1[displayedPageNumber - 1], pdfPages2[displayedPageNumber - 1]);
+                    modifiedMat1 = mats[0].Clone();
+                    modifiedMat2 = mats[1].Clone();
 
                     Mat msk = new Mat();
                     Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, msk);
@@ -463,8 +426,6 @@ namespace compare_PDF_as_image
                 double sizeRatio = e.NewValue / 100;
                 Matrix mx = new Matrix();
                 mx.Scale(sizeRatio, sizeRatio);
-                //imgSub.SetValue(Canvas.TopProperty, (double)imgSub.GetValue(Canvas.TopProperty) * sizeRatio);
-                //imgSub.SetValue(Canvas.LeftProperty, (double)imgSub.GetValue(Canvas.LeftProperty) * sizeRatio);
                 imgMain.LayoutTransform = new MatrixTransform(mx);
                 imgSub.LayoutTransform = new MatrixTransform(mx);
                 cvsMain.Height = imgMain.ActualHeight * sizeRatio;
@@ -587,26 +548,11 @@ namespace compare_PDF_as_image
             if (pageNumber1 > pdfPages1.Count) return;
             if (pdfPages2.Count < pageNumber2) return;
 
-            // ページのピクセルサイズが異なる場合は、page2をリサイズする。
-            Mat modifiedMat1 = new Mat();
-            Mat modifiedMat2 = new Mat();
-            OpenCvSharp.Size pageSize1 = pdfPages1[pageNumber1 - 1].Size();
-            OpenCvSharp.Size pageSize2 = pdfPages2[pageNumber2 - 1].Size();
-            if ((pageSize1.Height != pageSize2.Height) || (pageSize1.Width != pageSize2.Width))
-            {
-                int biggerHeight = Math.Max(pageSize1.Height, pageSize2.Height);
-                int biggerWidth = Math.Max(pageSize1.Width, pageSize2.Width);
-                OpenCvSharp.Size adjustedSize = new OpenCvSharp.Size();
-                adjustedSize.Height = biggerHeight;
-                adjustedSize.Width = biggerWidth;
-                Cv2.Resize(pdfPages1[pageNumber1 - 1], modifiedMat1, adjustedSize);
-                Cv2.Resize(pdfPages2[pageNumber2 - 1], modifiedMat2, adjustedSize);
-            }
-            else
-            {
-                modifiedMat1 = pdfPages1[pageNumber1 - 1];
-                modifiedMat2 = pdfPages2[pageNumber2 - 1];
-            }
+            var modifiedMat1 = new Mat();
+            var modifiedMat2 = new Mat();
+            List<Mat> mats = AdjustMatSize(pdfPages1[pageNumber1 - 1], pdfPages2[pageNumber2 - 1]);
+            modifiedMat1 = mats[0].Clone();
+            modifiedMat2 = mats[1].Clone();
 
             Mat m1 = new Mat();
             Mat msk1 = new Mat(modifiedMat1.Size(),modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
@@ -782,27 +728,12 @@ namespace compare_PDF_as_image
             if (pageNumber1 > pdfPages1.Count) return;
             if (pdfPages2.Count < pageNumber2) return;
 
-            // ページのピクセルサイズが異なる場合は、page2をリサイズする。
-            Mat modifiedMat1 = new Mat();
-            Mat modifiedMat2 = new Mat();
-            OpenCvSharp.Size pageSize1 = pdfPages1[pageNumber1 - 1].Size();
-            OpenCvSharp.Size pageSize2 = pdfPages2[pageNumber2 - 1].Size();
-            if ((pageSize1.Height != pageSize2.Height) || (pageSize1.Width != pageSize2.Width))
-            {
-                int biggerHeight = Math.Max(pageSize1.Height, pageSize2.Height);
-                int biggerWidth = Math.Max(pageSize1.Width, pageSize2.Width);
-                OpenCvSharp.Size adjustedSize = new OpenCvSharp.Size();
-                adjustedSize.Height = biggerHeight;
-                adjustedSize.Width = biggerWidth;
-                Cv2.Resize(pdfPages1[pageNumber1 - 1], modifiedMat1, adjustedSize);
-                Cv2.Resize(pdfPages2[pageNumber2 - 1], modifiedMat2, adjustedSize);
-            }
-            else
-            {
-                modifiedMat1 = pdfPages1[pageNumber1 - 1];
-                modifiedMat2 = pdfPages2[pageNumber2 - 1];
-            }
-
+            var modifiedMat1 = new Mat();
+            var modifiedMat2 = new Mat();
+            List<Mat> mats = AdjustMatSize(pdfPages1[pageNumber1 - 1], pdfPages2[pageNumber2 - 1]);
+            modifiedMat1 = mats[0].Clone();
+            modifiedMat2 = mats[1].Clone();
+            
             Mat m1 = new Mat();
             Mat msk1 = new Mat(modifiedMat1.Size(), modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
             Cv2.Merge(new Mat[] { msk1, modifiedMat1, modifiedMat1 }, m1);
