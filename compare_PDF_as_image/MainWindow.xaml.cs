@@ -197,7 +197,7 @@ namespace compare_PDF_as_image
 
         private void MenuLicense_Click(object sender, RoutedEventArgs e)
         {
-            string msg = "compare_PDF_as_image ver.0.0.0.2";
+            string msg = "compare_PDF_as_image ver.0.0.0.3";
             msg = msg + "\n\nこのソフトウェアは、 Apache 2.0ライセンスで配布されている製作物が含まれています。";
             msg = msg + "\nhttp://www.apache.org/licenses/LICENSE-2.0";
             msg = msg + "\nこのソフトウェアは、OpenCVSharpおよびそれが依存するソフトウェアを利用しています。";
