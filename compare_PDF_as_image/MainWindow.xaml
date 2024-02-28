@@ -67,6 +67,10 @@
                     </GroupBox>
                 </StackPanel>
             </GroupBox>
+            <StackPanel Orientation="Horizontal" Margin="23,5,5,5">
+                <CheckBox Name="chkEmphasis" Content="違いを強調" Width="122" IsEnabled="False" Checked="ChkEmphasis_Checked" Unchecked="ChkEmphasis_Unchecked" />
+                <Button Name="btnFixEmphasis" Content="固定" IsEnabled="False" Click="BtnFixEmphasis_Click" />
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="5">
                 <Button Name="btnPrev" Content="前" Width="50" Click="BtnPrev_Click" IsEnabled="False" />
                 <TextBlock Name="txtPage" Text="Page" Margin="10,5" Width="70" HorizontalAlignment="Center" />

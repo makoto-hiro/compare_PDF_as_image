@@ -493,16 +493,20 @@ namespace compare_PDF_as_image
                     }
                 }
             }
-            displayedPageNumber = 1;
-            ShowPage(displayedPageNumber, displayedPageNumber);
 
-            chkMove.IsEnabled = true;
-            chkResize.IsEnabled = true;
-            chkLineThickness.IsEnabled = true;
-            btnPrev.IsEnabled = true;
-            btnNext.IsEnabled = true;
-            sldScale.IsEnabled = true;
+            if ((pdfPages2.Count > 0) && (pdfPages2.Count > 0))
+            {
+                displayedPageNumber = 1;
+                ShowPage(displayedPageNumber, displayedPageNumber);
 
+                chkMove.IsEnabled = true;
+                chkResize.IsEnabled = true;
+                chkLineThickness.IsEnabled = true;
+                btnPrev.IsEnabled = true;
+                btnNext.IsEnabled = true;
+                sldScale.IsEnabled = true;
+                chkEmphasis.IsEnabled = true;
+            }
         }
 
         private void BtnNext_Click(object sender, RoutedEventArgs e)
@@ -539,6 +543,7 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = false;
             btnNext.IsEnabled = false;
             sldScale.IsEnabled = false;
+            chkEmphasis.IsEnabled = false;
 
             int pageNumber1 = displayedPageNumber;
             int pageNumber2 = displayedPageNumber;
@@ -603,6 +608,7 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = true;
             btnNext.IsEnabled = true;
             sldScale.IsEnabled = true;
+            chkEmphasis.IsEnabled = true;
         }
 
         private void BtnFixPosition_Click(object sender, RoutedEventArgs e)
@@ -663,6 +669,7 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = true;
             btnNext.IsEnabled = true;
             sldScale.IsEnabled = true;
+            chkEmphasis.IsEnabled = true;
         }
 
         private void ChkResize_Checked(object sender, RoutedEventArgs e)
@@ -673,6 +680,7 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = false;
             btnNext.IsEnabled = false;
             sldScale.IsEnabled = false;
+            chkEmphasis.IsEnabled = false;
         }
 
         private void ChkResize_Unchecked(object sender, RoutedEventArgs e)
@@ -698,6 +706,7 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = true;
             btnNext.IsEnabled = true;
             sldScale.IsEnabled = true;
+            chkEmphasis.IsEnabled = true;
         }
 
         private void TxtResize_KeyDown(object sender, KeyEventArgs e)
@@ -802,6 +811,7 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = true;
             btnNext.IsEnabled = true;
             sldScale.IsEnabled = true;
+            chkEmphasis.IsEnabled = true;
         }
 
         private void ChkLineThickness_Checked(object sender, RoutedEventArgs e)
@@ -814,6 +824,7 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = false;
             btnNext.IsEnabled = false;
             sldScale.IsEnabled = false;
+            chkEmphasis.IsEnabled = false;
         }
 
         private void ChkLineThickness_Unchecked(object sender, RoutedEventArgs e)
@@ -842,6 +853,7 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = true;
             btnNext.IsEnabled = true;
             sldScale.IsEnabled = true;
+            chkEmphasis.IsEnabled = true;
         }
 
         private void BtnThickness_Click(object sender, RoutedEventArgs e)
@@ -941,6 +953,41 @@ namespace compare_PDF_as_image
             btnPrev.IsEnabled = true;
             btnNext.IsEnabled = true;
             sldScale.IsEnabled = true;
+            chkEmphasis.IsEnabled = true;
+        }
+
+        private void ChkEmphasis_Checked(object sender, RoutedEventArgs e)
+        {
+            chkMove.IsEnabled = false;
+            chkResize.IsEnabled = false;
+            chkLineThickness.IsEnabled = false;
+            btnPrev.IsEnabled = false;
+            btnNext.IsEnabled = false;
+            sldScale.IsEnabled = false;
+            btnFixEmphasis.IsEnabled = true;
+        }
+
+        private void ChkEmphasis_Unchecked(object sender, RoutedEventArgs e)
+        {
+            chkMove.IsEnabled = true;
+            chkResize.IsEnabled = true;
+            chkLineThickness.IsEnabled = true;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            sldScale.IsEnabled = true;
+            btnFixEmphasis.IsEnabled = false;
+        }
+
+        private void BtnFixEmphasis_Click(object sender, RoutedEventArgs e)
+        {
+            chkMove.IsEnabled = true;
+            chkResize.IsEnabled = true;
+            chkLineThickness.IsEnabled = true;
+            btnPrev.IsEnabled = true;
+            btnNext.IsEnabled = true;
+            sldScale.IsEnabled = true;
+            chkEmphasis.IsChecked = false;
+            btnFixEmphasis.IsEnabled = false;
         }
     }
 }
