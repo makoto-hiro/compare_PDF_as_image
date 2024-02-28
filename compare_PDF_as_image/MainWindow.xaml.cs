@@ -703,11 +703,11 @@ namespace compare_PDF_as_image
         private void TxtResize_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key != Key.Return) return;
-            int targetRatio = 100;
-            bool result = int.TryParse(txtResize.Text, out targetRatio);
+            double targetRatio = 100.0;
+            bool result = double.TryParse(txtResize.Text, out targetRatio);
             if (result != true)
             {
-                txtPointerInfo.Text = "自然数を入力してください。";
+                txtPointerInfo.Text = "数値を入力してください。";
                 return;
             }
             if (targetRatio < 50 || targetRatio > 150)
