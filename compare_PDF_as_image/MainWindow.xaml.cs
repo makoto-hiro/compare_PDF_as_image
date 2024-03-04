@@ -965,6 +965,51 @@ namespace compare_PDF_as_image
             btnNext.IsEnabled = false;
             sldScale.IsEnabled = false;
             btnFixEmphasis.IsEnabled = true;
+
+            // ページのピクセルサイズが異なる場合は、page2をリサイズする。
+            var modifiedMat1 = new Mat();
+            var modifiedMat2 = new Mat();
+            List<Mat> mats = AdjustMatSize(pdfPages1[displayedPageNumber - 1], pdfPages2[displayedPageNumber - 1]);
+            modifiedMat1 = mats[0].Clone();
+            modifiedMat2 = mats[1].Clone();
+
+            // ２つのページの共通部分の画像を作る。
+            Mat msk5 = new Mat();
+            Cv2.BitwiseXor(modifiedMat1, modifiedMat2, msk5);
+
+            //Cv2.Erode(msk, msk, new Mat(new OpenCvSharp.Size(1, 1), MatType.CV_8UC1));
+            Cv2.Dilate(msk5, msk5, new Mat(new OpenCvSharp.Size(100, 100), MatType.CV_8UC1));
+
+            // 比較を表示するための画像を作る。
+            Mat m_e = new Mat();
+            var msk1 = new Mat();
+            Cv2.BitwiseNot(msk5, msk1);
+            Mat msk2 = new Mat(modifiedMat1.Size(), modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
+            Cv2.Merge(new Mat[] { msk1, msk2, msk2}, m_e);
+
+            /*
+            // 比較画像を表示する。
+            BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m_e);
+            imgMain.Source = img;
+            cvsMain.Width = img.PixelWidth;
+            cvsMain.Height = img.PixelHeight;
+            */
+
+            Mat msk = new Mat();
+            Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, msk);
+
+            // 比較を表示するための画像を作る。
+            Mat m = new Mat();
+            Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, m);
+
+            var om = new Mat();
+            Cv2.AddWeighted(m, 0.8, m_e, 0.5, 1.3, om);
+            BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(om);
+            imgMain.Source = img;
+            cvsMain.Width = img.PixelWidth;
+            cvsMain.Height = img.PixelHeight;
+
+
         }
 
         private void ChkEmphasis_Unchecked(object sender, RoutedEventArgs e)
