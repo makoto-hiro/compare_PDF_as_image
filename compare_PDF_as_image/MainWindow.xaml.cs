@@ -178,26 +178,6 @@ namespace compare_PDF_as_image
             txtInfo.Text = tp + "\n" + ph + "\n" + pw;
         }
 
-        private Mat PasteMatOnMat(Mat srcBackground, Mat srcTop)
-        {
-            var gray = new Mat();
-            Cv2.CvtColor(srcTop, gray, ColorConversionCodes.BGR2GRAY);
-            var mask = new Mat();
-            Cv2.Threshold(gray, mask, 5, 255, ThresholdTypes.Binary);
-            var maskInv = new Mat();
-            Cv2.BitwiseNot(mask, maskInv);
-
-            var maskedBG = new Mat();
-            Cv2.BitwiseAnd(srcBackground, srcBackground, maskedBG, maskInv);
-            var maskedFG = new Mat();
-            Cv2.BitwiseAnd(srcTop, srcTop, maskedFG, mask);
-
-            var dst = new Mat();
-            Cv2.Add(maskedBG, maskedFG, dst);
-
-            return dst;
-        }
-
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // アプリでの終了を無効にする。
@@ -994,55 +974,38 @@ namespace compare_PDF_as_image
             modifiedMat2 = mats[1].Clone();
 
             // ２つのページの共通でない部分を抽出する
-            Mat msk5 = new Mat();
-            Cv2.BitwiseXor(modifiedMat1, modifiedMat2, msk5);
-
+            Mat emphasisShapeMat = new Mat();
+            Cv2.BitwiseXor(modifiedMat1, modifiedMat2, emphasisShapeMat);
             // 共通でない部分の線を太くする（強調表示用）
-            //Cv2.Erode(msk, msk, new Mat(new OpenCvSharp.Size(1, 1), MatType.CV_8UC1));
-            Cv2.Dilate(msk5, msk5, new Mat(new OpenCvSharp.Size(100, 100), MatType.CV_8UC1));
+            Cv2.Dilate(emphasisShapeMat, emphasisShapeMat, new Mat(new OpenCvSharp.Size(10, 10), MatType.CV_8UC1),null,20);
+            // 反転する
+            Cv2.BitwiseNot(emphasisShapeMat, emphasisShapeMat);
+            // 強調部分に色をつける
+            Mat whiteMat = new Mat(modifiedMat1.Size(), modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
+            var coloredEmphasisShapeMat = new Mat();
+            Cv2.Merge(new Mat[] { emphasisShapeMat, whiteMat, whiteMat }, coloredEmphasisShapeMat);
 
-            // 強調表示以外の部分を抽出する（透明にする部分）
-            var msk1 = new Mat();
-            Cv2.BitwiseNot(msk5, msk1);
+            // ２つのページのいずれかに線がある部分を抽出する
+            var drawShapeMat = new Mat();
+            Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, drawShapeMat);
+            var msk = new Mat();
+            Cv2.Threshold(drawShapeMat, msk, 127, 255, ThresholdTypes.Binary);
+            Cv2.BitwiseNot(drawShapeMat, drawShapeMat);
 
-            // ２つのページのいずれかに線がある部分を抽出する（透明にする部分）
-            var msk6 = new Mat();
-            Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, msk6);
-            Cv2.BitwiseNot(msk6, msk6);
+            var maskedEmphasisMat = new Mat();
+            Cv2.BitwiseAnd(coloredEmphasisShapeMat, coloredEmphasisShapeMat, maskedEmphasisMat, msk);
 
-            Cv2.Add(msk1, msk6, msk6);
-            //Cv2.BitwiseOr(msk1, msk6, msk6);
-            Cv2.BitwiseNot(msk6, msk6);
+            // 両ページを合成した画像を作成する
+            Mat margedPage = new Mat();
+            Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, margedPage);
 
+            var maskedMargedPage = new Mat();
+            Cv2.BitwiseAnd(margedPage, margedPage, maskedMargedPage, drawShapeMat);
 
-            Mat m_e = new Mat();
-            var msk7 = new Mat();
-            Cv2.Add(msk1, msk6, msk7);
-            Mat msk2 = new Mat(modifiedMat1.Size(), modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
-            Cv2.Merge(new Mat[] { msk1, msk2, msk2}, m_e);
-            
-            /*
-            BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m_e);
-            imgMain.Source = img;
-            cvsMain.Width = img.PixelWidth;
-            cvsMain.Height = img.PixelHeight;
-            */
+            var emphasizedMat = new Mat();
+            Cv2.Add(maskedEmphasisMat, maskedMargedPage, emphasizedMat);
 
-            Mat msk = new Mat();
-            Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, msk);
-
-            // 比較を表示するための画像を作る。
-            Mat m = new Mat();
-            //Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1, new Mat(modifiedMat1.Size(), modifiedMat1.Type(), OpenCvSharp.Scalar.All(255)) }, m);
-            Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, m);
-
-            var o = PasteMatOnMat(m_e, m);
-
-            //Cv2.Add(m_e, m, m);
-
-            //var om = new Mat();
-            //Cv2.AddWeighted(m, 0.8, m_e, 0.5, 1.3, om);
-            BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(o);
+            BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(emphasizedMat);
             imgMain.Source = img;
             cvsMain.Width = img.PixelWidth;
             cvsMain.Height = img.PixelHeight;
