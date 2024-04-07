@@ -148,13 +148,49 @@ namespace compare_PDF_as_image
             modifiedMat1 = mats[0].Clone();
             modifiedMat2 = mats[1].Clone();
 
-            // ２つのページの共通部分の画像を作る。
-            Mat msk = new Mat();
-            Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, msk);
-
-            // 比較を表示するための画像を作る。
             Mat m = new Mat();
-            Cv2.Merge(new Mat[] { modifiedMat2, msk , modifiedMat1 }, m);
+            if (chkEmphasis.IsChecked == false)
+            {
+                // ２つのページの共通部分の画像を作る。
+                Mat msk = new Mat();
+                Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, msk);
+
+                // 比較を表示するための画像を作る。
+                Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, m);
+            }
+            else
+            {
+                // ２つのページの共通でない部分を抽出する
+                Mat emphasisShapeMat = new Mat();
+                Cv2.BitwiseXor(modifiedMat1, modifiedMat2, emphasisShapeMat);
+                // 共通でない部分の線を太くする（強調表示用）
+                Cv2.Dilate(emphasisShapeMat, emphasisShapeMat, new Mat(new OpenCvSharp.Size(10, 10), MatType.CV_8UC1), null, 20);
+                // 反転する
+                Cv2.BitwiseNot(emphasisShapeMat, emphasisShapeMat);
+                // 強調部分に色をつける
+                Mat whiteMat = new Mat(modifiedMat1.Size(), modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
+                var coloredEmphasisShapeMat = new Mat();
+                Cv2.Merge(new Mat[] { emphasisShapeMat, whiteMat, whiteMat }, coloredEmphasisShapeMat);
+
+                // ２つのページのいずれかに線がある部分を抽出する
+                var drawShapeMat = new Mat();
+                Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, drawShapeMat);
+                var msk = new Mat();
+                Cv2.Threshold(drawShapeMat, msk, 127, 255, ThresholdTypes.Binary);
+                Cv2.BitwiseNot(drawShapeMat, drawShapeMat);
+
+                var maskedEmphasisMat = new Mat();
+                Cv2.BitwiseAnd(coloredEmphasisShapeMat, coloredEmphasisShapeMat, maskedEmphasisMat, msk);
+
+                // 両ページを合成した画像を作成する
+                Mat margedPage = new Mat();
+                Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, margedPage);
+
+                var maskedMargedPage = new Mat();
+                Cv2.BitwiseAnd(margedPage, margedPage, maskedMargedPage, drawShapeMat);
+
+                Cv2.Add(maskedEmphasisMat, maskedMargedPage, m);
+            }
 
             // 比較画像を表示する。
             BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m);
@@ -958,81 +994,19 @@ namespace compare_PDF_as_image
 
         private void ChkEmphasis_Checked(object sender, RoutedEventArgs e)
         {
-            chkMove.IsEnabled = false;
-            chkResize.IsEnabled = false;
-            chkLineThickness.IsEnabled = false;
-            btnPrev.IsEnabled = false;
-            btnNext.IsEnabled = false;
-            sldScale.IsEnabled = false;
-            btnFixEmphasis.IsEnabled = true;
-
-            // ページのピクセルサイズが異なる場合は、page2をリサイズする。
-            var modifiedMat1 = new Mat();
-            var modifiedMat2 = new Mat();
-            List<Mat> mats = AdjustMatSize(pdfPages1[displayedPageNumber - 1], pdfPages2[displayedPageNumber - 1]);
-            modifiedMat1 = mats[0].Clone();
-            modifiedMat2 = mats[1].Clone();
-
-            // ２つのページの共通でない部分を抽出する
-            Mat emphasisShapeMat = new Mat();
-            Cv2.BitwiseXor(modifiedMat1, modifiedMat2, emphasisShapeMat);
-            // 共通でない部分の線を太くする（強調表示用）
-            Cv2.Dilate(emphasisShapeMat, emphasisShapeMat, new Mat(new OpenCvSharp.Size(10, 10), MatType.CV_8UC1),null,20);
-            // 反転する
-            Cv2.BitwiseNot(emphasisShapeMat, emphasisShapeMat);
-            // 強調部分に色をつける
-            Mat whiteMat = new Mat(modifiedMat1.Size(), modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
-            var coloredEmphasisShapeMat = new Mat();
-            Cv2.Merge(new Mat[] { emphasisShapeMat, whiteMat, whiteMat }, coloredEmphasisShapeMat);
-
-            // ２つのページのいずれかに線がある部分を抽出する
-            var drawShapeMat = new Mat();
-            Cv2.BitwiseAnd(modifiedMat1, modifiedMat2, drawShapeMat);
-            var msk = new Mat();
-            Cv2.Threshold(drawShapeMat, msk, 127, 255, ThresholdTypes.Binary);
-            Cv2.BitwiseNot(drawShapeMat, drawShapeMat);
-
-            var maskedEmphasisMat = new Mat();
-            Cv2.BitwiseAnd(coloredEmphasisShapeMat, coloredEmphasisShapeMat, maskedEmphasisMat, msk);
-
-            // 両ページを合成した画像を作成する
-            Mat margedPage = new Mat();
-            Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, margedPage);
-
-            var maskedMargedPage = new Mat();
-            Cv2.BitwiseAnd(margedPage, margedPage, maskedMargedPage, drawShapeMat);
-
-            var emphasizedMat = new Mat();
-            Cv2.Add(maskedEmphasisMat, maskedMargedPage, emphasizedMat);
-
-            BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(emphasizedMat);
-            imgMain.Source = img;
-            cvsMain.Width = img.PixelWidth;
-            cvsMain.Height = img.PixelHeight;
+            ShowPage(displayedPageNumber, displayedPageNumber);
 
         }
 
         private void ChkEmphasis_Unchecked(object sender, RoutedEventArgs e)
         {
-            chkMove.IsEnabled = true;
-            chkResize.IsEnabled = true;
-            chkLineThickness.IsEnabled = true;
-            btnPrev.IsEnabled = true;
-            btnNext.IsEnabled = true;
-            sldScale.IsEnabled = true;
-            btnFixEmphasis.IsEnabled = false;
+            ShowPage(displayedPageNumber, displayedPageNumber);
+
         }
 
         private void BtnFixEmphasis_Click(object sender, RoutedEventArgs e)
         {
-            chkMove.IsEnabled = true;
-            chkResize.IsEnabled = true;
-            chkLineThickness.IsEnabled = true;
-            btnPrev.IsEnabled = true;
-            btnNext.IsEnabled = true;
-            sldScale.IsEnabled = true;
-            chkEmphasis.IsChecked = false;
-            btnFixEmphasis.IsEnabled = false;
+
         }
     }
 }
