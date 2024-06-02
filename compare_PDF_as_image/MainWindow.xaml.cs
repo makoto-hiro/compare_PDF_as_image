@@ -45,6 +45,8 @@ namespace compare_PDF_as_image
         private Mat thickness1;
         private Mat thickness2;
 
+        ComparedImageProvider provider = new ComparedImageProvider();
+
         /// <summary>
         /// m1とm2に指定したMatのサイズが異なる場合に、m2のサイズをm1に合わせてリサイズする。
         /// </summary>
@@ -131,6 +133,10 @@ namespace compare_PDF_as_image
                     }
                 }
             }
+            if (docID == "1") provider.PdfPages1 = pdfPages1;
+            if (docID == "2") provider.PdfPages2 = pdfPages2;
+            //System.Windows.MessageBox.Show(provider.PdfPages1.Count.ToString());
+            //System.Windows.MessageBox.Show(provider.PdfPages2.Count.ToString());
         }
 
         private void ShowPage(int pageNumber1, int pageNumber2)
@@ -141,13 +147,16 @@ namespace compare_PDF_as_image
             if (pageNumber1 > pdfPages1.Count) return;
             if (pdfPages2.Count < pageNumber2) return;
 
+            /*
             // ページのピクセルサイズが異なる場合は、page2をリサイズする。
             var modifiedMat1 = new Mat();
             var modifiedMat2 = new Mat();
             List<Mat> mats = AdjustMatSize(pdfPages1[pageNumber1 - 1], pdfPages2[pageNumber2 - 1]);
             modifiedMat1 = mats[0].Clone();
             modifiedMat2 = mats[1].Clone();
+            */
 
+            /*
             Mat m = new Mat();
             if (chkEmphasis.IsChecked == false)
             {
@@ -197,7 +206,10 @@ namespace compare_PDF_as_image
             imgMain.Source = img;
             cvsMain.Width = img.PixelWidth;
             cvsMain.Height = img.PixelHeight;
+            */
 
+
+            /*
             // ページ番号を表示する。
             txtPage.Text = "Page " + displayedPageNumber.ToString() + " / " + pdfPages1.Count.ToString();
 
@@ -205,6 +217,25 @@ namespace compare_PDF_as_image
             OpenCvSharp.Size _s1 = pdfPages1[pageNumber1 - 1].Size();
             txtFile1SizeInfo.Text = "H : " + _s1.Height.ToString() + " / W : " + _s1.Width.ToString();
             OpenCvSharp.Size _s2 = pdfPages2[pageNumber2 - 1].Size();
+            txtFile2SizeInfo.Text = "H : " + _s2.Height.ToString() + " / W : " + _s2.Width.ToString();
+            */
+
+
+            provider.PageNum1 = pageNumber1;
+            provider.PageNum2 = pageNumber2;
+            provider.Emphasis = (bool)chkEmphasis.IsChecked;
+            BitmapSource img = provider.MergedPage;
+            imgMain.Source = img;
+            cvsMain.Width = img.PixelWidth;
+            cvsMain.Height = img.PixelHeight;
+
+            // ページ番号を表示する。
+            txtPage.Text = "Page " + displayedPageNumber.ToString() + " / " + provider.EndPageNum1.ToString();
+
+            // 各々の画像のピクセルサイズを表示する。
+            OpenCvSharp.Size _s1 = provider.PageSize1;
+            txtFile1SizeInfo.Text = "H : " + _s1.Height.ToString() + " / W : " + _s1.Width.ToString();
+            OpenCvSharp.Size _s2 = provider.PageSize2;
             txtFile2SizeInfo.Text = "H : " + _s2.Height.ToString() + " / W : " + _s2.Width.ToString();
 
             // 比較画像の情報を表示する。
@@ -490,7 +521,7 @@ namespace compare_PDF_as_image
                 txtFile1Info.Text = System.IO.Path.GetFileName(filename);
                 filePath1 = filename;
             }
-            if ((txtFile1Info.Text != "") && (txtFile2Info.Text !=""))
+            if ((txtFile1Info.Text != "") && (txtFile2Info.Text != ""))
             {
                 if ((pdfPages2.Count < 1) && (pdfPages2.Count < 1))
                 {
