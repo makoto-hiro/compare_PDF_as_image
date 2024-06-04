@@ -84,6 +84,30 @@ namespace compare_PDF_as_image
             get { return _pdfPages2[_pageNum2 - 1].Size(); }
         }
 
+        public List<Mat> AdjustedMats
+        {
+            get
+            {
+                List<Mat> mats = AdjustMatSize(_pdfPages1[_pageNum1 - 1], _pdfPages2[_pageNum2 - 1]);
+
+                var returnMats = new List<Mat>();
+                returnMats.Add(mats[0]);
+                returnMats.Add(mats[1]);
+                return returnMats;
+            }
+        }
+
+        public void ChangePage(int docID, Mat mat)
+        {
+            if (docID == 1)
+            {
+                _pdfPages1[_pageNum1 - 1] = mat;
+            } else if (docID == 2)
+            {
+                _pdfPages2[_pageNum2 - 1] = mat;
+            }
+        }
+
         public BitmapSource MergedPage
         {
             get

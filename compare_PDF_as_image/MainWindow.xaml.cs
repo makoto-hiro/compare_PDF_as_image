@@ -620,6 +620,7 @@ namespace compare_PDF_as_image
             if (pageNumber1 > pdfPages1.Count) return;
             if (pdfPages2.Count < pageNumber2) return;
 
+            /*
             var modifiedMat1 = new Mat();
             var modifiedMat2 = new Mat();
             List<Mat> mats = AdjustMatSize(pdfPages1[pageNumber1 - 1], pdfPages2[pageNumber2 - 1]);
@@ -629,6 +630,13 @@ namespace compare_PDF_as_image
             Mat m1 = new Mat();
             Mat msk1 = new Mat(modifiedMat1.Size(),modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
             Cv2.Merge(new Mat[] { msk1, modifiedMat1, modifiedMat1 }, m1);
+            */
+            List<Mat> mats = provider.AdjustedMats;
+
+            Mat m1 = new Mat();
+            Mat msk1 = new Mat(mats[0].Size(), mats[0].Type(), OpenCvSharp.Scalar.All(255));
+            Cv2.Merge(new Mat[] { msk1, mats[0], mats[0] }, m1);
+
 
             BitmapSource img1 = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m1);
             imgMain.Source = img1;
@@ -639,12 +647,18 @@ namespace compare_PDF_as_image
             imgMain.LayoutTransform = new MatrixTransform(mx);
             cvsMain.Height = imgMain.ActualHeight * sizeRatio;
             cvsMain.Width = imgMain.ActualWidth * sizeRatio;
-
+            /*
             Mat m2 = new Mat();
             Mat msk2 = new Mat(modifiedMat2.Size(), modifiedMat2.Type(), OpenCvSharp.Scalar.All(255));
             Mat m3 = new Mat();
             Cv2.BitwiseNot(modifiedMat2, m3);
             Cv2.Merge(new Mat[] { modifiedMat2, modifiedMat2, msk2, m3}, m2);
+            */
+            Mat m2 = new Mat();
+            Mat msk2 = new Mat(mats[1].Size(), mats[1].Type(), OpenCvSharp.Scalar.All(255));
+            Mat m3 = new Mat();
+            Cv2.BitwiseNot(mats[1], m3);
+            Cv2.Merge(new Mat[] { mats[1], mats[1], msk2, m3 }, m2);
 
             BitmapSource img2 = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m2);
             imgSub.Source = img2;
@@ -722,10 +736,20 @@ namespace compare_PDF_as_image
                 bottom1 = img2PosY;
                 bottom2 = 0;
             }
+
+            /*
             modifiedMat1 = pdfPages1[displayedPageNumber - 1].CopyMakeBorder((int)top1, (int)bottom1, (int)left1, (int)right1, BorderTypes.Constant, 255);
             modifiedMat2 = pdfPages2[displayedPageNumber - 1].CopyMakeBorder((int)top2, (int)bottom2, (int)left2, (int)right2, BorderTypes.Constant, 255);
             pdfPages1[displayedPageNumber - 1] = modifiedMat1;
             pdfPages2[displayedPageNumber - 1] = modifiedMat2;
+            */
+
+            List<Mat> mats = provider.AdjustedMats;
+            modifiedMat1 = mats[0].CopyMakeBorder((int)top1, (int)bottom1, (int)left1, (int)right1, BorderTypes.Constant, 255);
+            modifiedMat2 = mats[1].CopyMakeBorder((int)top2, (int)bottom2, (int)left2, (int)right2, BorderTypes.Constant, 255);
+
+            provider.ChangePage(1, modifiedMat1);
+            provider.ChangePage(2, modifiedMat2);
 
             ShowPage(displayedPageNumber, displayedPageNumber);
 
