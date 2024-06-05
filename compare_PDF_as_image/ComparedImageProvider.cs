@@ -69,11 +69,24 @@ namespace compare_PDF_as_image
         
         public int EndPageNum1
         {
-            get { return _pdfPages1.Count; }
+            get {
+                if (_pdfPages1 != null)
+                {
+                    return _pdfPages1.Count;
+                }
+                return 0;
+            }
         }
         public int EndPageNum2
         {
-            get { return _pdfPages2.Count; }
+            get
+            {
+                if (_pdfPages2 != null)
+                {
+                    return _pdfPages2.Count;
+                }
+                return 0;
+            }
         }
         public OpenCvSharp.Size PageSize1
         {

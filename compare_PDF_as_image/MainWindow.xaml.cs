@@ -45,7 +45,7 @@ namespace compare_PDF_as_image
         private Mat thickness1;
         private Mat thickness2;
 
-        ComparedImageProvider provider = new ComparedImageProvider();
+        private ComparedImageProvider provider = new ComparedImageProvider();
 
         /// <summary>
         /// m1とm2に指定したMatのサイズが異なる場合に、m2のサイズをm1に合わせてリサイズする。
@@ -142,10 +142,15 @@ namespace compare_PDF_as_image
         private void ShowPage(int pageNumber1, int pageNumber2)
         {
             // ページ数が表示の条件に合わない場合は、何もしない。
-            if (pageNumber1 < 1) return;
+            /*if (pageNumber1 < 1) return;
             if (pdfPages1.Count == 0) return;
             if (pageNumber1 > pdfPages1.Count) return;
             if (pdfPages2.Count < pageNumber2) return;
+            */
+            if (pageNumber1 < 1) return;
+            if (provider.EndPageNum1 == 0) return;
+            if (pageNumber1 > provider.EndPageNum1) return;
+            if (provider.EndPageNum2 < pageNumber2) return;
 
             /*
             // ページのピクセルサイズが異なる場合は、page2をリサイズする。
@@ -615,10 +620,16 @@ namespace compare_PDF_as_image
             int pageNumber1 = displayedPageNumber;
             int pageNumber2 = displayedPageNumber;
             // ページ数が表示の条件に合わない場合は、何もしない。
+            /*
             if (pageNumber1 < 1) return;
             if (pdfPages1.Count == 0) return;
             if (pageNumber1 > pdfPages1.Count) return;
             if (pdfPages2.Count < pageNumber2) return;
+            */
+            if (pageNumber1 < 1) return;
+            if (provider.EndPageNum1 == 0) return;
+            if (pageNumber1 > provider.EndPageNum1) return;
+            if (provider.EndPageNum2 < pageNumber2) return;
 
             /*
             var modifiedMat1 = new Mat();
@@ -823,11 +834,19 @@ namespace compare_PDF_as_image
             int pageNumber1 = displayedPageNumber;
             int pageNumber2 = displayedPageNumber;
             // ページ数が表示の条件に合わない場合は、何もしない。
+            /*
             if (pageNumber1 < 1) return;
             if (pdfPages1.Count == 0) return;
             if (pageNumber1 > pdfPages1.Count) return;
             if (pdfPages2.Count < pageNumber2) return;
+            */
+            if (pageNumber1 < 1) return;
+            if (provider.EndPageNum1 == 0) return;
+            if (pageNumber1 > provider.EndPageNum1) return;
+            if (provider.EndPageNum2 < pageNumber2) return;
 
+
+            /*
             var modifiedMat1 = new Mat();
             var modifiedMat2 = new Mat();
             List<Mat> mats = AdjustMatSize(pdfPages1[pageNumber1 - 1], pdfPages2[pageNumber2 - 1]);
@@ -837,6 +856,12 @@ namespace compare_PDF_as_image
             Mat m1 = new Mat();
             Mat msk1 = new Mat(modifiedMat1.Size(), modifiedMat1.Type(), OpenCvSharp.Scalar.All(255));
             Cv2.Merge(new Mat[] { msk1, modifiedMat1, modifiedMat1 }, m1);
+            */
+
+            List<Mat> mats = provider.AdjustedMats;
+            Mat m1 = new Mat();
+            Mat msk1 = new Mat(mats[0].Size(), mats[0].Type(), OpenCvSharp.Scalar.All(255));
+            Cv2.Merge(new Mat[] { msk1, mats[0], mats[0] }, m1);
 
             BitmapSource img1 = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m1);
             imgMain.Source = img1;
@@ -848,11 +873,19 @@ namespace compare_PDF_as_image
             cvsMain.Height = imgMain.ActualHeight * sizeRatio;
             cvsMain.Width = imgMain.ActualWidth * sizeRatio;
 
+            /*
             Mat m2 = new Mat();
             Mat msk2 = new Mat(modifiedMat2.Size(), modifiedMat2.Type(), OpenCvSharp.Scalar.All(255));
             Mat m3 = new Mat();
             Cv2.BitwiseNot(modifiedMat2, m3);
             Cv2.Merge(new Mat[] { modifiedMat2, modifiedMat2, msk2, m3 }, m2);
+            */
+
+            Mat m2 = new Mat();
+            Mat msk2 = new Mat(mats[1].Size(), mats[1].Type(), OpenCvSharp.Scalar.All(255));
+            Mat m3 = new Mat();
+            Cv2.BitwiseNot(mats[1], m3);
+            Cv2.Merge(new Mat[] { mats[1], mats[1], msk2, m3 }, m2);
 
             var m4 = new Mat();
             Cv2.Resize(m2, m4, new OpenCvSharp.Size(), targetRatio / 100.0, targetRatio / 100.0);
@@ -875,9 +908,15 @@ namespace compare_PDF_as_image
 
             if (s1.Width != s2.Width)
             {
+                /*
                 var resizedMat = new Mat();
                 resizedMat = pdfPages2[displayedPageNumber-1].CopyMakeBorder(0, (int)lengthHeight, 0, (int)lengthWidth, BorderTypes.Constant, 255);
                 pdfPages2[displayedPageNumber - 1] = resizedMat;
+                */
+                var resizedMat = new Mat();
+                List<Mat> mats = provider.AdjustedMats;
+                resizedMat = mats[1].CopyMakeBorder(0, (int)lengthHeight, 0, (int)lengthWidth, BorderTypes.Constant, 255);
+                provider.ChangePage(2, resizedMat);
             }
 
             ShowPage(displayedPageNumber, displayedPageNumber);
@@ -952,17 +991,27 @@ namespace compare_PDF_as_image
             int pageNumber1 = displayedPageNumber;
             int pageNumber2 = displayedPageNumber;
             // ページ数が表示の条件に合わない場合は、何もしない。
+            /*
             if (pageNumber1 < 1) return;
             if (pdfPages1.Count == 0) return;
             if (pageNumber1 > pdfPages1.Count) return;
             if (pdfPages2.Count < pageNumber2) return;
+            */
+            if (pageNumber1 < 1) return;
+            if (provider.EndPageNum1 == 0) return;
+            if (pageNumber1 > provider.EndPageNum1) return;
+            if (provider.EndPageNum2 < pageNumber2) return;
+
 
             // 膨張させる元のデータを選択する。
             Mat modifiedMat1 = new Mat();
             Mat modifiedMat2 = new Mat();
             if (thickness1 == null || thickness2 == null)
             {
+                /*
                 List<Mat> mats = AdjustMatSize(pdfPages1[pageNumber1 - 1], pdfPages2[pageNumber2 - 1]);
+                */
+                List<Mat> mats = provider.AdjustedMats;
                 modifiedMat1 = mats[0].Clone();
                 modifiedMat2 = mats[1].Clone();
             }
@@ -1015,8 +1064,12 @@ namespace compare_PDF_as_image
         {
             if (thickness1 != null && thickness2 != null)
             {
+                /*
                 pdfPages1[displayedPageNumber - 1] = thickness1.Clone();
                 pdfPages2[displayedPageNumber - 1] = thickness2.Clone();
+                */
+                provider.ChangePage(1, thickness1);
+                provider.ChangePage(2, thickness2);
             }
 
             ShowPage(displayedPageNumber, displayedPageNumber);
