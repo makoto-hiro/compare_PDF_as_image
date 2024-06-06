@@ -56,11 +56,13 @@ namespace compare_PDF_as_image
         private int _pageNum1 = 0;
         public int PageNum1
         {
+            get { return _pageNum1; }
             set { _pageNum1 = value; }
         }
         private int _pageNum2 = 0;
         public int PageNum2
         {
+            get { return _pageNum2; }
             set { _pageNum2 = value; }
         }
 
@@ -108,6 +110,19 @@ namespace compare_PDF_as_image
                 returnMats.Add(mats[1]);
                 return returnMats;
             }
+        }
+
+        public void ClearPages(int docID)
+        {
+            if (docID == 1)
+            {
+                if (_pdfPages1 != null) _pdfPages1.Clear();
+            }
+            else if (docID == 2)
+            {
+                if (_pdfPages2 != null) _pdfPages2.Clear();
+            }
+
         }
 
         public void ChangePage(int docID, Mat mat)

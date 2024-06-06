@@ -34,8 +34,6 @@ namespace compare_PDF_as_image
         private int displayedPageNumber = 1;
         private System.Windows.Point startPoint;
         private System.Windows.Point startPosition;
-        private List<Mat> pdfPages1 = new List<Mat>();
-        private List<Mat> pdfPages2 = new List<Mat>();
         private string filePath1 = "";
         private string filePath2 = "";
         private System.Windows.Point canvasStartPoint;
@@ -47,6 +45,7 @@ namespace compare_PDF_as_image
 
         private ComparedImageProvider provider = new ComparedImageProvider();
 
+        /*
         /// <summary>
         /// m1とm2に指定したMatのサイズが異なる場合に、m2のサイズをm1に合わせてリサイズする。
         /// </summary>
@@ -82,10 +81,13 @@ namespace compare_PDF_as_image
 
             return returnMats;
         }
+        */
 
         private async Task ReadPDFtoImage(string filename, string docID)
         {
             var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(System.IO.Path.GetFullPath(filename));
+            List<Mat> pdfPages1 = new List<Mat>();
+            List<Mat> pdfPages2 = new List<Mat>();
 
             try
             {
@@ -244,7 +246,8 @@ namespace compare_PDF_as_image
             txtFile2SizeInfo.Text = "H : " + _s2.Height.ToString() + " / W : " + _s2.Width.ToString();
 
             // 比較画像の情報を表示する。
-            string tp = "Page : " + pageNumber1.ToString() + " / " + pdfPages1.Count.ToString();
+            //string tp = "Page : " + pageNumber1.ToString() + " / " + pdfPages1.Count.ToString();
+            string tp = "Page : " + pageNumber1.ToString() + " / " + provider.EndPageNum1.ToString();
             string ph = "PixelHeight : " + img.PixelHeight.ToString();
             string pw = "PixelWidth : " + img.PixelWidth.ToString();
             txtInfo.Text = tp + "\n" + ph + "\n" + pw;
@@ -282,6 +285,7 @@ namespace compare_PDF_as_image
 
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
+            /*
             if (pdfPages1.Count < 1) return;
             if (pdfPages2.Count < 1) return;
 
@@ -342,12 +346,17 @@ namespace compare_PDF_as_image
                 printDoc.Pages.Add(printContent);
             }
             diag.PrintDocument(printDoc.DocumentPaginator, "Print1");
+            */
         }
 
         private void MenuTiffExport_Click(object sender, RoutedEventArgs e)
         {
+            /*
             if (pdfPages1.Count < 1) return;
             if (pdfPages2.Count < 1) return;
+            */
+            if (provider.EndPageNum1 < 1) return;
+            if (provider.EndPageNum2 < 1) return;
 
             var dialog = new Microsoft.Win32.SaveFileDialog();
             dialog.DefaultExt = ".tif";
@@ -355,11 +364,14 @@ namespace compare_PDF_as_image
             bool? result = dialog.ShowDialog();
             if (result == true)
             {
+                int currentPage1 = provider.PageNum1;
+                int currentPage2 = provider.PageNum2;
                 string filename = dialog.FileName;
                 using (var fs = new FileStream(filename, FileMode.Create))
                 {
                     var encoder = new TiffBitmapEncoder();
 
+                    /*
                     int pageNum = Math.Min((int)pdfPages1.Count, (int)pdfPages2.Count);
                     for (int i = 0; i < pageNum; i++)
                     {
@@ -378,14 +390,26 @@ namespace compare_PDF_as_image
                         BitmapSource img = OpenCvSharp.WpfExtensions.WriteableBitmapConverter.ToWriteableBitmap(m);
                         encoder.Frames.Add(BitmapFrame.Create(img));
                     }
+                    */
+                    int pageNum = Math.Min(provider.EndPageNum1, provider.EndPageNum2);
+                    for (int i = 0; i < pageNum; i++)
+                    {
+                        provider.PageNum1 = i + 1;
+                        provider.PageNum2 = i + 1;
+                        BitmapSource img = provider.MergedPage;
+                        encoder.Frames.Add(BitmapFrame.Create(img));
+                    }
                     encoder.Save(fs);
                 }
+                provider.PageNum1 = currentPage1;
+                provider.PageNum2 = currentPage2;
             }
         }
 
         private void MenuPNGExport_Click(object sender, RoutedEventArgs e)
         {
-            if (pdfPages1.Count < 1) return;
+            //if (pdfPages1.Count < 1) return;
+            if (provider.EndPageNum1 < 1) return;
 
             var dialog = new Microsoft.Win32.SaveFileDialog();
             dialog.DefaultExt = ".png";
@@ -397,7 +421,7 @@ namespace compare_PDF_as_image
                 using (var fs = new FileStream(filename, FileMode.Create))
                 {
                     PngBitmapEncoder encoder = new PngBitmapEncoder();
-
+                    /*
                     var modifiedMat1 = new Mat();
                     var modifiedMat2 = new Mat();
                     List<Mat> mats = AdjustMatSize(pdfPages1[displayedPageNumber - 1], pdfPages2[displayedPageNumber - 1]);
@@ -411,6 +435,8 @@ namespace compare_PDF_as_image
                     Cv2.Merge(new Mat[] { modifiedMat2, msk, modifiedMat1 }, m);
 
                     BitmapSource img = WriteableBitmapConverter.ToWriteableBitmap(m);
+                    */
+                    BitmapSource img = provider.MergedPage;
                     encoder.Frames.Add(BitmapFrame.Create(img));
                     encoder.Save(fs);
                 }
@@ -528,15 +554,18 @@ namespace compare_PDF_as_image
             }
             if ((txtFile1Info.Text != "") && (txtFile2Info.Text != ""))
             {
-                if ((pdfPages2.Count < 1) && (pdfPages2.Count < 1))
+                //if ((pdfPages2.Count < 1) && (pdfPages2.Count < 1))
+                if ((provider.EndPageNum1 < 1) && (provider.EndPageNum2 < 1))
                 {
-                    pdfPages1.Clear();
+                    //pdfPages1.Clear();
+                    provider.ClearPages(1);
                     txtFile1Info.Foreground = new SolidColorBrush(Colors.Red);
                     txtFile1Info.Text = "ファイル読み込み中";
                     await ReadPDFtoImage(filePath1, "1");
                     txtFile1Info.Foreground = new SolidColorBrush(Colors.Black);
                     txtFile1Info.Text = System.IO.Path.GetFileName(filePath1);
-                    pdfPages2.Clear();
+                    //pdfPages2.Clear();
+                    provider.ClearPages(2);
                     txtFile2Info.Foreground = new SolidColorBrush(Colors.Red);
                     txtFile2Info.Text = "ファイル読み込み中";
                     await ReadPDFtoImage(filePath2, "2");
@@ -547,7 +576,8 @@ namespace compare_PDF_as_image
                 {
                     if (btnID == "2")
                     {
-                        pdfPages2.Clear();
+                        //pdfPages2.Clear();
+                        provider.ClearPages(2);
                         txtFile2Info.Foreground = new SolidColorBrush(Colors.Red);
                         txtFile2Info.Text = "ファイル読み込み中";
                         await ReadPDFtoImage(filePath2, "2");
@@ -556,7 +586,8 @@ namespace compare_PDF_as_image
                     }
                     else
                     {
-                        pdfPages1.Clear();
+                        //pdfPages1.Clear();
+                        provider.ClearPages(1);
                         txtFile1Info.Foreground = new SolidColorBrush(Colors.Red);
                         txtFile1Info.Text = "ファイル読み込み中";
                         await ReadPDFtoImage(filePath1, "1");
@@ -566,7 +597,8 @@ namespace compare_PDF_as_image
                 }
             }
 
-            if ((pdfPages2.Count > 0) && (pdfPages2.Count > 0))
+            //if ((pdfPages2.Count > 0) && (pdfPages2.Count > 0))
+            if ((provider.EndPageNum1 > 0) && (provider.EndPageNum2 > 0))
             {
                 displayedPageNumber = 1;
                 ShowPage(displayedPageNumber, displayedPageNumber);
@@ -583,7 +615,8 @@ namespace compare_PDF_as_image
 
         private void BtnNext_Click(object sender, RoutedEventArgs e)
         {
-            if (displayedPageNumber < pdfPages1.Count)
+            //if (displayedPageNumber < pdfPages1.Count)
+            if (displayedPageNumber < provider.EndPageNum1)
             {
                 displayedPageNumber++;
                 ShowPage(displayedPageNumber, displayedPageNumber);
